@@ -1,0 +1,6 @@
+[run]
+source =
+    evidence/
+    tests/
+omit =
+    setup.py

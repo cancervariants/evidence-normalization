@@ -1,0 +1,12 @@
+[flake8]
+extend-ignore = D205, D400, ANN101, ANN003
+inline-quotes = "
+exclude =
+  .git
+  venv
+  __pycache__
+  source
+  outputs
+per-file-ignores =
+  tests/*:ANN001, ANN2
+  setup.py: F821

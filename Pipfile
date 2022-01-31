@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+
+[dev-packages]
+evidence = {editable = true, path = "."}
+pytest = "*"
+pre-commit = "*"
+flake8 = "*"
+flake8-docstrings = "*"
+flake8-quotes = "*"
+flake8-annotations = "*"
+coverage = "*"
+coveralls = "*"
+pytest-cov = "*"
+ipykernel = "*"
