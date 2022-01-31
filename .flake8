@@ -1,12 +1,19 @@
 [flake8]
-extend-ignore = D205, D400, ANN101, ANN003
-inline-quotes = "
+ignore = D205, D400, I101, ANN101, ANN002, ANN003
+max-line-length = 88
 exclude =
   .git
   venv
   __pycache__
   source
   outputs
+  evidence/version.py
+inline-quotes = "
+import-order-style = pep8
+application-import-names =
+  evidence
+  tests
 per-file-ignores =
   tests/*:ANN001, ANN2
-  setup.py: F821
+  setup.py:F821
+  *__init__.py:F401
