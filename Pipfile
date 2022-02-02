@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 pydantic = "*"
 requests = "*"
+bravado = "*"
+matplotlib = "*"
+seaborn = "*"
 
 [dev-packages]
 evidence = {editable = true, path = "."}
