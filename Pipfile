@@ -9,6 +9,11 @@ requests = "*"
 bravado = "*"
 matplotlib = "*"
 seaborn = "*"
+variation-normalizer = "*"
+pandas = "*"
+openpyxl = "*"
+xlrd = "*"
+xlwt = "*"
 
 [dev-packages]
 evidence = {editable = true, path = "."}
