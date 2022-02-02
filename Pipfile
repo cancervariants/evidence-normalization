@@ -4,6 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pydantic = "*"
+requests = "*"
 
 [dev-packages]
 evidence = {editable = true, path = "."}
@@ -13,6 +15,7 @@ flake8 = "*"
 flake8-docstrings = "*"
 flake8-quotes = "*"
 flake8-annotations = "*"
+flake8-import-order = "*"
 coverage = "*"
 coveralls = "*"
 pytest-cov = "*"
