@@ -36,12 +36,13 @@ def custom_openapi() -> Dict:
 
 
 app.openapi = custom_openapi
+RESPONSE_DESCRIPTION = "A response to a validly-formed query."
 
 
-@app.get("/evidence/cancer_hotspots/mutation_by_disease",
-         summary="Given variant data, return cancer hotspots data.",
-         response_description="A response to a validly-formed query.",
-         description="Return cancer hotspots data for variant..")
+@app.get("/evidence/cancer_hotspots/mutation_hotspots",
+         summary="Given variant data, return cancer hotspots mutation data.",
+         response_description=RESPONSE_DESCRIPTION,
+         description="Return mutation hotspots data for variant.")
 def get_cancer_hotspots(
     so_id: str = Query("SO:0001606", enum=["SO:0001606", "SO:0001017"],
                        description="The structural type of the variant"),
@@ -54,12 +55,13 @@ def get_cancer_hotspots(
 
     :return: Cancer Hotspot data
     """
-    return cancer_hotspots.hotspot_data(html.unescape(so_id), vrs_variation_id)
+    return cancer_hotspots.mutation_hotspots(
+        html.unescape(so_id), html.unescape(vrs_variation_id))
 
 
 @app.get("/evidence/cbioportal/cancer_types_summary",
          summary="Given entrez ID for a gene, return cancer types summary.",
-         response_description="A response to a validly-formed query.",
+         response_description=RESPONSE_DESCRIPTION,
          description="Return cancer types with gene mutations.")
 def get_cancer_types_summary(
     entrez_gene_id: str = Query(..., description="Entrez ID for gene.")
@@ -69,7 +71,7 @@ def get_cancer_types_summary(
     :param str entrez_gene_id: Enetrez ID for gene
     :return: Return cancer types with `entrez_gene_id` mutations
     """
-    return cbioportal.get_mutation_data(entrez_gene_id)
+    return cbioportal.cancer_types_summary(entrez_gene_id)
 
 
 @app.get("/evidence/gnomad/liftover/38_to_37")
@@ -98,7 +100,7 @@ def gnomad_37_to_38(
 
 @app.get("/evidence/gnomad/clinvar_variation_id",
          summary="Given gnomad variant id, return clinvar variation id",
-         response_description="A response to a validly-formed query.",
+         response_description=RESPONSE_DESCRIPTION,
          description="Return clinvar variation id")
 def get_clinvar_variation_id(
     gnomad_variant_id: str = Query(..., description="gnomAD variant ID"),
@@ -116,7 +118,7 @@ def get_clinvar_variation_id(
 
 @app.get("/evidence/gnomad/frequency_data",
          summary="Given variant id, return gnomAD Frequency.",
-         response_description="A response to a validly-formed query.",
+         response_description=RESPONSE_DESCRIPTION,
          description="Return gnomAD population frequency data for variant.")
 def get_gnomad_frequency(
     variant_id: str = Query(

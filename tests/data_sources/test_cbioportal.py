@@ -294,7 +294,7 @@ def braf():
 
 def test_get_mutation_data(cbioportal, braf):
     """Test that get_mutation_data method works correctly."""
-    resp = cbioportal.get_mutation_data(673).dict()
+    resp = cbioportal.cancer_types_summary(673).dict()
     data = resp["data"]
     assert data.keys() == braf.keys()
 
@@ -307,7 +307,7 @@ def test_get_mutation_data(cbioportal, braf):
     assert resp["source_meta_"]["label"] == "cBioPortal"
     assert resp["source_meta_"]["version"] == "1.0 (beta)"
 
-    resp = cbioportal.get_mutation_data(0).dict()
+    resp = cbioportal.cancer_types_summary(0).dict()
     assert resp["data"] is None
     assert resp["source_meta_"]["label"] == "cBioPortal"
     assert resp["source_meta_"]["version"] == "1.0 (beta)"

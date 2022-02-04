@@ -100,21 +100,21 @@ def test_query_indel_hotspots(cancer_hotspots):
 
 def test_hotspot_data(cancer_hotspots, braf_v600e):
     """Test that hotspot_data method works correctly."""
-    resp = cancer_hotspots.hotspot_data(
+    resp = cancer_hotspots.mutation_hotspots(
         so_id="SO:0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict()
     assert resp["data"] == braf_v600e
     check_source_meta(resp)
 
     # invalid vrs_variation_id
-    resp = cancer_hotspots.hotspot_data(
+    resp = cancer_hotspots.mutation_hotspots(
         so_id="SO:0001606", vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict()
     assert resp["data"] is None
     check_source_meta(resp)
 
     # invalid so_id
-    resp = cancer_hotspots.hotspot_data(
+    resp = cancer_hotspots.mutation_hotspots(
         so_id="SO0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict()
     assert resp["data"] is None

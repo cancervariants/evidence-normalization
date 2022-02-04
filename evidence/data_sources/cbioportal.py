@@ -45,7 +45,7 @@ class cBioPortal:
                 version=version[:version.index(".", 2)]
             )
 
-    def get_mutation_data(self, gene_id: int) -> Dict:
+    def cancer_types_summary(self, gene_id: int) -> Dict:
         """Get cancer types with gene mutations data
 
         :param int gene_id: Entrez ID for gene

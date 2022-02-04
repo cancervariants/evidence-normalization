@@ -90,7 +90,7 @@ class CancerHotspots:
                 with open(self.data_path, "wb") as f:
                     f.write(r.content)
 
-    def hotspot_data(self, so_id: str, vrs_variation_id: str) -> Optional[Dict]:
+    def mutation_hotspots(self, so_id: str, vrs_variation_id: str) -> Optional[Dict]:
         """Get cancer hotspot data for a variant
 
         :param str so_id: The structural type of the variation
