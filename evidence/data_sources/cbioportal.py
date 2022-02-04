@@ -7,7 +7,7 @@ from bravado.exception import HTTPNotFound
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from evidence.schemas import SourceMeta, Response
+from evidence.schemas import SourceMeta, Response, Sources
 
 
 class cBioPortal:
@@ -41,7 +41,7 @@ class cBioPortal:
             resp = r.json()
             version = resp["info"]["version"]
             return SourceMeta(
-                label="cBioPortal",
+                label=Sources.CBIOPORTAL,
                 version=version[:version.index(".", 2)]
             )
 

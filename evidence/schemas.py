@@ -7,9 +7,11 @@ from pydantic.types import StrictStr
 
 
 class Sources(str, Enum):
-    """Define sources"""
+    """Define data sources"""
 
     GNOMAD = "gnomAD"
+    CANCER_HOTSPOTS = "Cancer Hotspots"
+    CBIOPORTAL = "cBioPortal"
 
 
 class SourceMeta(BaseModel):

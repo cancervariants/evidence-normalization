@@ -10,7 +10,7 @@ import requests
 from variation.query import QueryHandler
 
 from evidence import DATA_ROOT, logger
-from evidence.schemas import SourceMeta, Response
+from evidence.schemas import SourceMeta, Response, Sources
 
 
 class CancerHotspots:
@@ -31,7 +31,7 @@ class CancerHotspots:
         self.indel_hotspots = pd.read_excel(self.normalized_data_path,
                                             sheet_name="INDEL-hotspots")
         self.source_meta = SourceMeta(
-            label="Cancer Hotspots",
+            label=Sources.CANCER_HOTSPOTS.value,
             version="2"
         )
 
