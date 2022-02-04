@@ -2,23 +2,12 @@
 import html
 from typing import Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query
 from fastapi.openapi.utils import get_openapi
 
 from evidence.data_sources import CancerHotspots, cBioPortal, gnomAD
 from evidence.version import __version__
 from evidence.schemas import Response
-
-
-class InvalidParameterException(Exception):
-    """Exception for invalid parameter args provided by the user."""
-
-    def __init__(self, message: str) -> None:
-        """Create new instance
-        :param str message: string describing the nature of the error
-        """
-        super().__init__(message)
-
 
 gnomad = gnomAD()
 cbioportal = cBioPortal()
@@ -65,11 +54,7 @@ def get_cancer_hotspots(
 
     :return: Cancer Hotspot data
     """
-    try:
-        resp = cancer_hotspots.hotspot_data(html.unescape(so_id), vrs_variation_id)
-    except InvalidParameterException as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    return resp
+    return cancer_hotspots.hotspot_data(html.unescape(so_id), vrs_variation_id)
 
 
 @app.get("/evidence/cbioportal/cancer_types_summary",
@@ -84,11 +69,7 @@ def get_cancer_types_summary(
     :param str entrez_gene_id: Enetrez ID for gene
     :return: Return cancer types with `entrez_gene_id` mutations
     """
-    try:
-        resp = cbioportal.get_mutation_data(entrez_gene_id)
-    except InvalidParameterException as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    return resp
+    return cbioportal.get_mutation_data(entrez_gene_id)
 
 
 @app.get("/evidence/gnomad/liftover/38_to_37")
@@ -147,10 +128,4 @@ def get_gnomad_frequency(
     :param str variant_id: variation id
     :return: Return gnomAD population frequency data for variant.
     """
-    if not variant_id:
-        raise HTTPException(status_code=422, detail="Must provide `variant_id`")
-    try:
-        resp = gnomad.frequency_data(html.unescape(variant_id))
-    except InvalidParameterException as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    return resp
+    return gnomad.frequency_data(html.unescape(variant_id))
