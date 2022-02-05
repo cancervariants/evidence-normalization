@@ -18,6 +18,11 @@ pipenv shell
 pipenv lock && pipenv sync
 ```
 
+### Backend Services
+
+Evidence Normalization relies on [Variation Normalization](https://github.com/cancervariants/variation-normalization) for normalizing Cancer Hotspots data. You will need to setup backend services and set the appropriate environment variables. See the [README](https://github.com/cancervariants/variation-normalization#variation-normalization) for more information.
+
+
 ### Init coding style tests
 
 Code style is managed by [flake8](https://github.com/PyCQA/flake8) and checked prior to commit.

@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 from variation.query import QueryHandler
 
-from evidence import DATA_ROOT, logger
+from evidence import DATA_ROOT, logger, ENV_NAME
 from evidence.schemas import SourceMeta, Response, Sources
 
 
@@ -32,12 +32,10 @@ class CancerHotspots:
         self.og_indel_sheet_name = "INDEL-hotspots"
         self.new_indel_sheet_name = "indel_hotspots"
 
-        if not self.normalized_data_path.exists():
-            raise FileNotFoundError(
-                f"{self.normalized_data_path} not found. You must manually run "
-                f"`_add_vrs_identifier_to_data` to create the file. "
-                f"This will take some time."
-            )
+        if ENV_NAME != "PROD" and not self.normalized_data_path.exists():
+            # PROD env will already have this data file
+            logger.info("Creating normalized data... This will take some time.")
+            self._add_vrs_identifier_to_data()
 
         self.snv_hotspots = pd.read_excel(
             self.normalized_data_path, sheet_name=self.og_snv_sheet_name)
