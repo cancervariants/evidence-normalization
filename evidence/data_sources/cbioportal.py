@@ -13,13 +13,16 @@ from evidence.schemas import SourceMeta, Response, Sources
 class cBioPortal:
     """cBioPortal class."""
 
-    def __init__(self, study_id: str = "msk_impact_2017") -> None:
+    def __init__(self, study_id: str = "msk_impact_2017",
+                 api_docs_url: str = "https://www.cbioportal.org/api/api-docs") -> None:
         """Initialize cBioPortal class
 
-        :param str study_id: The id for the study to retreive mutation data from
+        :param str study_id: The id for the study to retrieve mutation data from
+        :param str api_docs_url: The url to api docs
         """
+        self.api_docs_url = api_docs_url
         self.cbioportal = SwaggerClient.from_url(
-            "https://www.cbioportal.org/api/api-docs",
+            self.api_docs_url,
             config={
                 "validate_requests": False,
                 "validate_responses": False,
@@ -33,10 +36,9 @@ class cBioPortal:
         self.study_id = study_id
         self.source_meta = self.source_meta()
 
-    @staticmethod
-    def source_meta() -> Optional[SourceMeta]:
+    def source_meta(self) -> Optional[SourceMeta]:
         """Return source meta for cBioPortal"""
-        r = requests.get("https://www.cbioportal.org/api/api-docs")
+        r = requests.get(self.api_docs_url)
         if r.status_code == 200:
             resp = r.json()
             version = resp["info"]["version"]
@@ -45,10 +47,11 @@ class cBioPortal:
                 version=version[:version.index(".", 2)]
             )
 
-    def cancer_types_summary(self, gene_id: int) -> Dict:
+    def cancer_types_summary(self, gene_id: int) -> Response:
         """Get cancer types with gene mutations data
 
         :param int gene_id: Entrez ID for gene
+        :return: Cancer types summary for gene
         """
         try:
             self.cbioportal.genes.getGeneUsingGET(geneId=gene_id).result()
@@ -87,7 +90,7 @@ class cBioPortal:
 
     @staticmethod
     def cancer_types_summary_graph(tumor_type_totals: Dict) -> None:
-        """Make cancer types sumamry graph.
+        """Make cancer types summary graph.
 
         :param Dict tumor_type_totals: Cancer summary data containing `count`, `total`,
             and `percent_altered`

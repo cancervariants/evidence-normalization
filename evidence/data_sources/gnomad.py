@@ -14,9 +14,8 @@ class gnomAD:
     def __init__(self) -> None:
         """Initialize gnomAD class"""
         self.api = "https://gnomad.broadinstitute.org/api"
-        self.datasets = [GnomadDataset.GNOMAD_R3, GnomadDataset.GNOMAD_R2_1]
-        self.reference_genomes = [ReferenceGenome.GRCH38,
-                                  ReferenceGenome.GRCH37]
+        self.datasets = [v.value for v in GnomadDataset.__members__.values()]
+        self.reference_genomes = [v.value for v in ReferenceGenome.__members__.values()]
         self.population_ids = {
             "afr": "African/African American",
             "ami": "Amish",
@@ -40,10 +39,10 @@ class gnomAD:
         }
 
     @staticmethod
-    def reference_genome_to_dataset(ref_genome: str) -> Optional[str]:
+    def reference_genome_to_dataset(ref_genome: ReferenceGenome) -> Optional[str]:
         """Return dataset associated to reference genome
 
-        :param str ref_genome: Reference genome
+        :param ReferenceGenome ref_genome: Reference genome
         :return: gnomad dataset
         """
         dataset = None
@@ -54,21 +53,22 @@ class gnomAD:
         return dataset
 
     @staticmethod
-    def dataset_to_reference_genome(dataset: str) -> Optional[str]:
+    def dataset_to_reference_genome(dataset: GnomadDataset) -> Optional[str]:
         """Return reference genome associated to dataset
 
-        :param str dataset: gnomad dataset
+        :param GnomadDataset dataset: gnomad dataset
         :return: Reference genome
         """
         ref_genome = None
         if dataset == GnomadDataset.GNOMAD_R3:
-            ref_genome = ReferenceGenome.GRCH38.value
+            ref_genome = ReferenceGenome.GRCH38
         elif dataset == GnomadDataset.GNOMAD_R2_1:
-            ref_genome = ReferenceGenome.GRCH37.value
+            ref_genome = ReferenceGenome.GRCH37
         return ref_genome
 
     def query(self, query: str, variables: Dict) -> Dict:
         """Return response for API query.
+
         :param str query: Query
         :param Dict variables: Variables in query
         :return: Response for API query
@@ -86,6 +86,7 @@ class gnomAD:
 
     def liftover_37_to_38(self, gnomad_variant_id: str) -> Response:
         """Liftover 37 to 38
+
         :param str gnomad_variant_id: gnomad variant id to liftover
         :return: gnomad 38 data
         """
@@ -119,6 +120,7 @@ class gnomAD:
 
     def liftover_38_to_37(self, gnomad_variant_id: str) -> Response:
         """Liftover 38 to 37
+
         :param str gnomad_variant_id: gnomad variant id to liftover
         :return: gnomad 37 data
         """
@@ -151,10 +153,11 @@ class gnomAD:
             return Response(data=data)
 
     def clinvar_variation_id(self, gnomad_variant_id: str,
-                             reference_genome: str = None) -> Optional[str]:
+                             reference_genome: ReferenceGenome = None) -> Response:
         """Return clinvar variant id given gnomad variant id
+
         :param str gnomad_variant_id: gnomad variant id
-        :param str reference_genome: reference genome assembly
+        :param Optional[ReferenceGenome] reference_genome: reference genome assembly
         :return: Clinvar variant id if it exists
         """
         query = """
@@ -187,11 +190,13 @@ class gnomAD:
         else:
             return Response(data=None)
 
-    def variant_id_to_gnomad_id(self, variant_id: str,
-                                reference_genome: Optional[str] = None) -> Dict:
+    def variant_id_to_gnomad_id(
+            self, variant_id: str,
+            reference_genome: Optional[ReferenceGenome] = None) -> Dict:
         """Convert variant_id to gnomAD variation id.
+
         :param str variant_id: ID for variant to search
-        :param Optional[str] reference_genome: Reference genome
+        :param Optional[ReferenceGenome] reference_genome: Reference genome
         :return: Dictionary containing variation ID and dataset used
         """
         query = """
@@ -227,10 +232,11 @@ class gnomAD:
         return response
 
     def variant(self, gnomad_variant_id: str,
-                reference_genome: Optional[str] = None) -> Dict:
+                reference_genome: Optional[ReferenceGenome] = None) -> Dict:
         """Get gnomAD data for variant.
+
         :param str gnomad_variant_id: gnomAD variant id
-        :param Optional[str] reference_genome: Reference genome
+        :param Optional[ReferenceGenome] reference_genome: Reference genome
         :return: gnomAD data for variant
         """
         query = """
@@ -275,8 +281,9 @@ class gnomAD:
 
     def population_data(self, data: Dict, result: Dict = None) -> Dict:
         """Merge population data into result.
+
         :param Dict data: Population data for exome or genome
-        :param Dict result: Merged result object
+        :param Optional[Dict] result: Merged result object
         :return: Merged result object containing population data
         """
         if not result:
@@ -307,11 +314,12 @@ class gnomAD:
         return result
 
     def frequency_data(self, variant_id: str,
-                       reference_genome: Optional[str] = None) -> Dict:
+                       reference_genome: Optional[ReferenceGenome] = None) -> Response:
         """Get gnomad frequency data for variant
+
         :param str variant_id: gnomAD variant id, clingen allele registry id,
             rsid, or gnomad variant id
-        :param Optional[str] reference_genome: Reference genome
+        :param Optional[ReferenceGenome] reference_genome: Reference genome
         :return: Population data for variant
         """
         data = {
@@ -378,5 +386,5 @@ class gnomAD:
 
         return Response(
             data=data,
-            source_meta_=SourceMeta(label=Sources.GNOMAD.value, version=dataset)
+            source_meta_=SourceMeta(label=Sources.GNOMAD, version=dataset)
         )

@@ -17,7 +17,7 @@ class Sources(str, Enum):
 class SourceMeta(BaseModel):
     """Metadata for sources"""
 
-    label: StrictStr
+    label: Sources
     version: StrictStr
 
 
@@ -31,6 +31,7 @@ class Response(BaseModel):
 class GnomadDataset(str, Enum):
     """Define datasets used in gnomad"""
 
+    # MUST put in descending dataset
     GNOMAD_R3 = "gnomad_r3"
     GNOMAD_R2_1 = "gnomad_r2_1"
 
@@ -38,5 +39,6 @@ class GnomadDataset(str, Enum):
 class ReferenceGenome(str, Enum):
     """Define reference genome assemblies"""
 
-    GRCH37 = "GRCh37"
+    # MUST put in descending assembly
     GRCH38 = "GRCh38"
+    GRCH37 = "GRCh37"

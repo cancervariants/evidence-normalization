@@ -7,6 +7,13 @@ APP_ROOT = Path(__file__).resolve().parents[0]
 DATA_ROOT = APP_ROOT / "data"
 SEQREPO_DATA_PATH = environ.get("SEQREPO_DATA_PATH", "/usr/local/share/seqrepo/latest")
 
+if environ.get("EVIDENCE_PROD") == "True":
+    ENV_NAME = "PROD"
+    environ["VARIATION_NORM_EB_PROD"] = "True"
+    environ["GENE_NORM_EB_PROD"] = "True"
+else:
+    ENV_NAME = "DEV"
+
 logging.basicConfig(
     filename="evidence-normalizer.log",
     format="[%(asctime)s] - %(name)s - %(levelname)s : %(message)s"
