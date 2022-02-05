@@ -18,14 +18,14 @@ class SourceMeta(BaseModel):
     """Metadata for sources"""
 
     label: Sources
-    version: StrictStr
+    version: Optional[StrictStr] = None
 
 
 class Response(BaseModel):
     """Response model"""
 
-    data: Optional[Union[Dict, List[Dict]]]
-    source_meta_: Optional[SourceMeta]
+    data: Optional[Union[Dict, List[Dict]]] = None
+    source_meta_: Optional[SourceMeta] = None
 
 
 class GnomadDataset(str, Enum):

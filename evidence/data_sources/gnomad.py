@@ -108,7 +108,7 @@ class gnomAD:
         }
         resp = self.query(query, variables)
         if "errors" in resp or len(resp["data"]["liftover"]) == 0:
-            return Response()
+            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
         else:
             liftover = resp["data"]["liftover"][0]["liftover"]
             data = {
@@ -116,7 +116,7 @@ class gnomAD:
                 "reference_genome": liftover["reference_genome"],
                 "dataset": self.datasets[0]
             }
-            return Response(data=data)
+            return Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
 
     def liftover_38_to_37(self, gnomad_variant_id: str) -> Response:
         """Liftover 38 to 37
@@ -142,7 +142,7 @@ class gnomAD:
         }
         resp = self.query(query, variables)
         if "errors" in resp or len(resp["data"]["liftover"]) == 0:
-            return Response()
+            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
         else:
             liftover = resp["data"]["liftover"][0]["source"]
             data = {
@@ -150,7 +150,7 @@ class gnomAD:
                 "reference_genome": liftover["reference_genome"],
                 "dataset": self.datasets[1]
             }
-            return Response(data=data)
+            return Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
 
     def clinvar_variation_id(self, gnomad_variant_id: str,
                              reference_genome: ReferenceGenome = None) -> Response:
@@ -186,9 +186,10 @@ class gnomAD:
                 if "errors" not in resp:
                     break
         if resp and "errors" not in resp:
-            return Response(data=resp["data"]["clinvar_variant"])
+            return Response(data=resp["data"]["clinvar_variant"],
+                            source_meta_=SourceMeta(label=Sources.GNOMAD))
         else:
-            return Response(data=None)
+            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
 
     def variant_id_to_gnomad_id(
             self, variant_id: str,
@@ -340,7 +341,7 @@ class gnomAD:
         }
         variant_id_resp = self.variant_id_to_gnomad_id(variant_id, reference_genome)
         if "errors" in variant_id_resp or len(variant_id_resp["data"]["variant_search"]) == 0:  # noqa: E501
-            return Response(data=None)
+            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
 
         variant_id = variant_id_resp["data"]["variant_search"][0]["variant_id"]
         if not reference_genome:
@@ -349,7 +350,7 @@ class gnomAD:
 
         variant_resp = self.variant(variant_id, reference_genome)
         if "errors" in variant_resp:
-            return Response(data=None)
+            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
         gnomad_frequency_resp = variant_resp["data"]["variant"]
         data["variant"] = gnomad_frequency_resp["variantId"]
         data["assembly"] = gnomad_frequency_resp["reference_genome"]
