@@ -110,12 +110,12 @@ def test_hotspot_data(cancer_hotspots, braf_v600e):
     resp = cancer_hotspots.mutation_hotspots(
         so_id="SO:0001606", vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     check_source_meta(resp)
 
     # invalid so_id
     resp = cancer_hotspots.mutation_hotspots(
         so_id="SO0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     check_source_meta(resp)

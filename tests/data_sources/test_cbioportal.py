@@ -308,6 +308,6 @@ def test_get_mutation_data(cbioportal, braf):
     assert resp["source_meta_"]["version"] == "1.0 (beta)"
 
     resp = cbioportal.cancer_types_summary(0).dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     assert resp["source_meta_"]["label"] == "cBioPortal"
     assert resp["source_meta_"]["version"] == "1.0 (beta)"

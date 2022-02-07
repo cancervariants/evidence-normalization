@@ -121,7 +121,7 @@ def test_liftover_37_to_38(gnomad):
     }
 
     resp = gnomad.liftover_37_to_38("7-140753336-A-T").dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     time.sleep(5)
 
 
@@ -135,7 +135,7 @@ def test_liftover_38_to_37(gnomad):
     }
 
     resp = gnomad.liftover_38_to_37("7-140453136-A-T").dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     time.sleep(5)
 
 
@@ -151,7 +151,7 @@ def test_clinvar_variation_id(gnomad):
     assert resp["data"]["clinvar_variation_id"] == "13961"
 
     resp = gnomad.clinvar_variation_id("7-140453136-A-T", "GRCh38").dict()
-    assert resp["data"] is None
+    assert resp["data"] == dict()
     time.sleep(5)
 
 
@@ -274,5 +274,5 @@ def test_frequency_data(gnomad, braf, tpm3, egfr_37, egfr_38):
     time.sleep(10)
 
     resp = gnomad.frequency_data("fake").dict()
-    assert resp["data"] is None
-    assert resp["source_meta_"] is None
+    assert resp["data"] == dict()
+    assert resp["source_meta_"] == {"label": "gnomAD", "version": None}

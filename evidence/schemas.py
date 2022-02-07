@@ -1,6 +1,6 @@
 """Module containing schemas"""
 from enum import Enum
-from typing import Dict, Optional, Union, List
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 from pydantic.types import StrictStr
@@ -24,8 +24,8 @@ class SourceMeta(BaseModel):
 class Response(BaseModel):
     """Response model"""
 
-    data: Optional[Union[Dict, List[Dict]]] = None
-    source_meta_: Optional[SourceMeta] = None
+    data: Dict = dict()
+    source_meta_: SourceMeta
 
 
 class GnomadDataset(str, Enum):

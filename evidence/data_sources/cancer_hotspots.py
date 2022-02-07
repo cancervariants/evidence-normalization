@@ -117,7 +117,7 @@ class CancerHotspots:
             data = self.query_indel_hotspots(vrs_variation_id)
 
         return Response(
-            data=data if data else None,
+            data=data if data else dict(),
             source_meta_=self.source_meta
         )
 

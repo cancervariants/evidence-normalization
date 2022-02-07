@@ -56,7 +56,7 @@ class cBioPortal:
         try:
             self.cbioportal.genes.getGeneUsingGET(geneId=gene_id).result()
         except HTTPNotFound:
-            return Response(data=None, source_meta_=self.source_meta)
+            return Response(data=dict(), source_meta_=self.source_meta)
 
         mutations = self.cbioportal.mutations.getMutationsInMolecularProfileBySampleListIdUsingGET(  # noqa: E501
             molecularProfileId=f"{self.study_id}_mutations",

@@ -42,7 +42,8 @@ RESPONSE_DESCRIPTION = "A response to a validly-formed query."
 @app.get("/evidence/cancer_hotspots/mutation_hotspots",
          summary="Given variant data, return cancer hotspots mutation data.",
          response_description=RESPONSE_DESCRIPTION,
-         description="Return mutation hotspots data for variant.")
+         description="Return mutation hotspots data for variant.",
+         response_model=Response)
 def get_cancer_hotspots(
     so_id: str = Query("SO:0001606", enum=["SO:0001606", "SO:0001017"],
                        description="The structural type of the variant"),
@@ -62,7 +63,8 @@ def get_cancer_hotspots(
 @app.get("/evidence/cbioportal/cancer_types_summary",
          summary="Given entrez ID for a gene, return cancer types summary.",
          response_description=RESPONSE_DESCRIPTION,
-         description="Return cancer types with gene mutations.")
+         description="Return cancer types with gene mutations.",
+         response_model=Response)
 def get_cancer_types_summary(
     entrez_gene_id: str = Query(..., description="Entrez ID for gene.")
 ) -> Response:
@@ -74,7 +76,11 @@ def get_cancer_types_summary(
     return cbioportal.cancer_types_summary(entrez_gene_id)
 
 
-@app.get("/evidence/gnomad/liftover/38_to_37")
+@app.get("/evidence/gnomad/liftover/38_to_37",
+         summary="Liftover gnomad variant id from GRCh38 to GRCh37",
+         response_description=RESPONSE_DESCRIPTION,
+         description="Return GRCh37 gnomad variant id",
+         response_model=Response)
 def gnomad_38_to_37(
     gnomad_variant_id: str = Query(..., decsription="gnomAD variant ID on 38 assembly")
 ) -> Response:
@@ -86,7 +92,11 @@ def gnomad_38_to_37(
     return gnomad.liftover_38_to_37(gnomad_variant_id)
 
 
-@app.get("/evidence/gnomad/liftover/37_to_38")
+@app.get("/evidence/gnomad/liftover/37_to_38",
+         summary="Liftover gnomad variant id from GRCh37 to GRCh38",
+         response_description=RESPONSE_DESCRIPTION,
+         description="Return GRCh38 gnomad variant id",
+         response_model=Response)
 def gnomad_37_to_38(
     gnomad_variant_id: str = Query(..., decsription="gnomAD variant ID on 37 assembly")
 ) -> Response:
@@ -101,7 +111,8 @@ def gnomad_37_to_38(
 @app.get("/evidence/gnomad/clinvar_variation_id",
          summary="Given gnomad variant id, return clinvar variation id",
          response_description=RESPONSE_DESCRIPTION,
-         description="Return clinvar variation id")
+         description="Return clinvar variation id",
+         response_model=Response)
 def get_clinvar_variation_id(
     gnomad_variant_id: str = Query(..., description="gnomAD variant ID"),
     reference_genome: Optional[str] = Query(None, description="GRCh37 or GRCh38")
@@ -119,7 +130,8 @@ def get_clinvar_variation_id(
 @app.get("/evidence/gnomad/frequency_data",
          summary="Given variant id, return gnomAD Frequency.",
          response_description=RESPONSE_DESCRIPTION,
-         description="Return gnomAD population frequency data for variant.")
+         description="Return gnomAD population frequency data for variant.",
+         response_model=Response)
 def get_gnomad_frequency(
     variant_id: str = Query(
         None,
