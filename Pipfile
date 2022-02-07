@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pydantic = "*"
+requests = "*"
+bravado = "*"
+matplotlib = "*"
+seaborn = "*"
+variation-normalizer = "*"
+pandas = "*"
+openpyxl = "*"
+xlrd = "*"
+xlwt = "*"
+fastapi = "*"
+
+[dev-packages]
+evidence = {editable = true, path = "."}
+pytest = "*"
+pre-commit = "*"
+flake8 = "*"
+flake8-docstrings = "*"
+flake8-quotes = "*"
+flake8-annotations = "*"
+flake8-import-order = "*"
+coverage = "*"
+pytest-cov = "*"
+ipykernel = "*"
