@@ -3,13 +3,13 @@ import time
 
 import pytest
 
-from evidence.data_sources import gnomAD
+from evidence.data_sources import GnomAD
 
 
 @pytest.fixture(scope="module")
 def gnomad():
     """Create test fixture for gnomad class"""
-    return gnomAD()
+    return GnomAD()
 
 
 @pytest.fixture(scope="module")

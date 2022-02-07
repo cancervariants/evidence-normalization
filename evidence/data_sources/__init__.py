@@ -1,4 +1,4 @@
 """Import data sources"""
-from .gnomad import gnomAD
-from .cbioportal import cBioPortal
+from .gnomad import GnomAD
+from .cbioportal import CBioPortal
 from .cancer_hotspots import CancerHotspots

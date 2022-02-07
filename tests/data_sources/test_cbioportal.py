@@ -1,13 +1,13 @@
 """Module for testing cbioportal"""
 import pytest
 
-from evidence.data_sources import cBioPortal
+from evidence.data_sources import CBioPortal
 
 
 @pytest.fixture(scope="module")
 def cbioportal():
     """Create test fixture for cbioportal class"""
-    return cBioPortal()
+    return CBioPortal()
 
 
 @pytest.fixture(scope="module")

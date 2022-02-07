@@ -5,12 +5,12 @@ from typing import Dict, Optional
 from fastapi import FastAPI, Query
 from fastapi.openapi.utils import get_openapi
 
-from evidence.data_sources import CancerHotspots, cBioPortal, gnomAD
+from evidence.data_sources import CancerHotspots, CBioPortal, GnomAD
 from evidence.version import __version__
 from evidence.schemas import Response
 
-gnomad = gnomAD()
-cbioportal = cBioPortal()
+gnomad = GnomAD()
+cbioportal = CBioPortal()
 cancer_hotspots = CancerHotspots()
 app = FastAPI(docs_url="/evidence", openapi_url="/evidence/openapi.json",
               swagger_ui_parameters={"tryItOutEnabled": True})

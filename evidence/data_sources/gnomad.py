@@ -8,7 +8,7 @@ from evidence.schemas import SourceMeta, Response, GnomadDataset, \
     ReferenceGenome, Sources
 
 
-class gnomAD:
+class GnomAD:
     """gnomAD class."""
 
     def __init__(self) -> None:

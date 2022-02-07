@@ -10,7 +10,7 @@ import seaborn as sns
 from evidence.schemas import SourceMeta, Response, Sources
 
 
-class cBioPortal:
+class CBioPortal:
     """cBioPortal class."""
 
     def __init__(self, study_id: str = "msk_impact_2017",
