@@ -29,7 +29,7 @@ class CancerHotspots:
         """Initialize Cancer Hotspots class
 
         :param str data_url: URL to data file
-        :param src_dir_path: Path to cancer hotspots data directory
+        :param Path src_dir_path: Path to cancer hotspots data directory
         :param Optional[Path] normalized_data_path: Path to normalized cancer
             hotspots file
         """
@@ -38,10 +38,15 @@ class CancerHotspots:
         self.src_dir_path = src_dir_path
         self.src_dir_path.mkdir(exist_ok=True, parents=True)
         self.data_path = self.src_dir_path / fn
-        if normalized_data_path and normalized_data_path.exists():
-            self.normalized_data_path = normalized_data_path
-        else:
+        self.normalized_data_path = None
+        if not normalized_data_path:
             self.get_normalized_data_path()
+        else:
+            if normalized_data_path.exists():
+                self.normalized_data_path = normalized_data_path
+            else:
+                logger.error(f"Normalized Cancer Hotspots path does not exist: "
+                             f"{normalized_data_path}")
 
         if not self.normalized_data_path:
             raise FileNotFoundError(
@@ -121,8 +126,7 @@ class CancerHotspots:
         """Download latest normalized data from public s3 bucket if it does not already
         exist in data dir and set normalized_data_path
         """
-        logger.info("Attempting to retrieve normalized data from s3 bucket...")
-        normalized_data_path = None
+        logger.info("Retrieving normalized data from s3 bucket...")
         s3 = boto3.resource("s3", config=Config(region_name="us-east-2"))
         bucket = sorted(list(s3.Bucket("vicc-normalizers").objects.filter(
             Prefix="evidence_normalization/cancer_hotspots/normalized_hotspots_v").all()), key=lambda o: o.key)  # noqa: E501
@@ -141,10 +145,10 @@ class CancerHotspots:
                 logger.info("Successfully downloaded normalized Cancer Hotspots data")
             else:
                 logger.info("Latest normalized Cancer Hotspots data already exists")
+            self.normalized_data_path = normalized_data_path
         else:
             logger.warning("Could not find normalized Cancer Hotspots"
                            " data in vicc-normalizers s3 bucket")
-        self.normalized_data_path = normalized_data_path
 
     def mutation_hotspots(self, so_id: str, vrs_variation_id: str) -> Response:
         """Get cancer hotspot data for a variant
