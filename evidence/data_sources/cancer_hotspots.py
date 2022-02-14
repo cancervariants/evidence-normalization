@@ -23,7 +23,7 @@ class CancerHotspots:
 
     def __init__(
         self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
-        src_dir_path: Path = Path(DATA_DIR_PATH / "cancer_hotspots"),
+        src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
         normalized_data_path: Optional[Path] = None
     ) -> None:
         """Initialize Cancer Hotspots class
@@ -45,8 +45,9 @@ class CancerHotspots:
             if normalized_data_path.exists():
                 self.normalized_data_path = normalized_data_path
             else:
-                logger.error(f"Normalized Cancer Hotspots path does not exist: "
-                             f"{normalized_data_path}")
+                logger.error(f"The supplied path at `normalized_data_path`, "
+                             f"{normalized_data_path}, for Cancer Hotspots does "
+                             f"not exist.")
 
         if not self.normalized_data_path:
             raise FileNotFoundError(
