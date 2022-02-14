@@ -4,7 +4,7 @@ from os import environ
 import logging
 
 APP_ROOT = Path(__file__).resolve().parents[0]
-DATA_ROOT = APP_ROOT / "data"
+DATA_DIR_PATH = APP_ROOT / "data"
 SEQREPO_DATA_PATH = environ.get("SEQREPO_DATA_PATH", "/usr/local/share/seqrepo/latest")
 
 if environ.get("EVIDENCE_PROD") == "True":

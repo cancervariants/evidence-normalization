@@ -3,13 +3,18 @@
 Downloads Site: https://www.cancerhotspots.org/#/download
 Data URL: https://www.cancerhotspots.org/files/hotspots_v2.xls
 """
+from os import remove
+import shutil
+from pathlib import Path
 from typing import Dict, Optional
 
 import pandas as pd
 import requests
 from variation.query import QueryHandler
+import boto3
+from botocore.config import Config
 
-from evidence import DATA_ROOT, logger, ENV_NAME
+from evidence import DATA_DIR_PATH, logger
 from evidence.schemas import SourceMeta, Response, Sources
 
 
@@ -17,25 +22,41 @@ class CancerHotspots:
     """Class for Cancer Hotspots Data Access."""
 
     def __init__(
-        self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls"
+        self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
+        src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
+        normalized_data_path: Optional[Path] = None
     ) -> None:
         """Initialize Cancer Hotspots class
 
         :param str data_url: URL to data file
+        :param Path src_dir_path: Path to cancer hotspots data directory
+        :param Optional[Path] normalized_data_path: Path to normalized cancer
+            hotspots file
         """
         self.data_url = data_url
         fn = self.data_url.split("/")[-1]
-        self.data_path = DATA_ROOT / fn
-        self.normalized_data_path = DATA_ROOT / f"normalized_{fn}"
+        self.src_dir_path = src_dir_path
+        self.src_dir_path.mkdir(exist_ok=True, parents=True)
+        self.data_path = self.src_dir_path / fn
+        self.normalized_data_path = None
+        if not normalized_data_path:
+            self.get_normalized_data_path()
+        else:
+            if normalized_data_path.exists():
+                self.normalized_data_path = normalized_data_path
+            else:
+                logger.error(f"The supplied path at `normalized_data_path`, "
+                             f"{normalized_data_path}, for Cancer Hotspots does "
+                             f"not exist.")
+
+        if not self.normalized_data_path:
+            raise FileNotFoundError(
+                "Unable to retrieve path for normalized Cancer Hotspots data")
+
         self.og_snv_sheet_name = "SNV-hotspots"
         self.new_snv_sheet_name = "snv_hotspots"
         self.og_indel_sheet_name = "INDEL-hotspots"
         self.new_indel_sheet_name = "indel_hotspots"
-
-        if ENV_NAME != "PROD" and not self.normalized_data_path.exists():
-            # PROD env will already have this data file
-            logger.info("Creating normalized data... This will take some time.")
-            self._add_vrs_identifier_to_data()
 
         self.snv_hotspots = pd.read_excel(
             self.normalized_data_path, sheet_name=self.og_snv_sheet_name)
@@ -45,7 +66,7 @@ class CancerHotspots:
 
     def _add_vrs_identifier_to_data(self) -> None:
         """Normalize variations in cancer hotspots SNV sheet and adds `vrs_identifier`
-        column to dataframe. This should be run each time variation-normalizer
+        column to dataframe. Run manually each time variation-normalizer
         or Cancer Hotspots releases a new version.
         """
         self.download_data()
@@ -101,6 +122,34 @@ class CancerHotspots:
             if r.status_code == 200:
                 with open(self.data_path, "wb") as f:
                     f.write(r.content)
+
+    def get_normalized_data_path(self) -> None:
+        """Download latest normalized data from public s3 bucket if it does not already
+        exist in data dir and set normalized_data_path
+        """
+        logger.info("Retrieving normalized data from s3 bucket...")
+        s3 = boto3.resource("s3", config=Config(region_name="us-east-2"))
+        bucket = sorted(list(s3.Bucket("vicc-normalizers").objects.filter(
+            Prefix="evidence_normalization/cancer_hotspots/normalized_hotspots_v").all()), key=lambda o: o.key)  # noqa: E501
+        if len(bucket) > 0:
+            obj = bucket.pop().Object()
+            obj_s3_path = obj.key
+            zip_fn = obj_s3_path.split("/")[-1]
+            fn = zip_fn[:-4]
+            normalized_data_path = self.src_dir_path / fn
+            if not normalized_data_path.exists():
+                zip_path = self.src_dir_path / zip_fn
+                with open(zip_path, "wb") as f:
+                    obj.download_fileobj(f)
+                shutil.unpack_archive(zip_path, self.src_dir_path)
+                remove(zip_path)
+                logger.info("Successfully downloaded normalized Cancer Hotspots data")
+            else:
+                logger.info("Latest normalized Cancer Hotspots data already exists")
+            self.normalized_data_path = normalized_data_path
+        else:
+            logger.warning("Could not find normalized Cancer Hotspots"
+                           " data in vicc-normalizers s3 bucket")
 
     def mutation_hotspots(self, so_id: str, vrs_variation_id: str) -> Response:
         """Get cancer hotspot data for a variant
