@@ -9,8 +9,6 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import pandas as pd
-import requests
-from variation.query import QueryHandler
 import boto3
 from botocore.config import Config
 
@@ -24,7 +22,8 @@ class CancerHotspots:
     def __init__(
         self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
         src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
-        normalized_data_path: Optional[Path] = None
+        normalized_data_path: Optional[Path] = None,
+        ignore_normalized_data: bool = False
     ) -> None:
         """Initialize Cancer Hotspots class
 
@@ -32,96 +31,43 @@ class CancerHotspots:
         :param Path src_dir_path: Path to cancer hotspots data directory
         :param Optional[Path] normalized_data_path: Path to normalized cancer
             hotspots file
+        :param bool ignore_normalized_data: `True` if only bare init is needed. This
+            is intended for developers when using the CLI to normalize cancer hotspots
+            data. Ignores path set in `normalized_data_path`.
+            `False` will load normalized data from s3 and load normalized
+            excel sheet data.
         """
         self.data_url = data_url
         fn = self.data_url.split("/")[-1]
         self.src_dir_path = src_dir_path
         self.src_dir_path.mkdir(exist_ok=True, parents=True)
         self.data_path = self.src_dir_path / fn
-        self.normalized_data_path = None
-        if not normalized_data_path:
-            self.get_normalized_data_path()
-        else:
-            if normalized_data_path.exists():
-                self.normalized_data_path = normalized_data_path
-            else:
-                logger.error(f"The supplied path at `normalized_data_path`, "
-                             f"{normalized_data_path}, for Cancer Hotspots does "
-                             f"not exist.")
-
-        if not self.normalized_data_path:
-            raise FileNotFoundError(
-                "Unable to retrieve path for normalized Cancer Hotspots data")
-
         self.og_snv_sheet_name = "SNV-hotspots"
-        self.new_snv_sheet_name = "snv_hotspots"
         self.og_indel_sheet_name = "INDEL-hotspots"
+        self.new_snv_sheet_name = "snv_hotspots"
         self.new_indel_sheet_name = "indel_hotspots"
-
-        self.snv_hotspots = pd.read_excel(
-            self.normalized_data_path, sheet_name=self.og_snv_sheet_name)
-        self.indel_hotspots = pd.read_excel(
-            self.normalized_data_path, sheet_name=self.og_indel_sheet_name)
         self.source_meta = SourceMeta(label=Sources.CANCER_HOTSPOTS, version="2")
 
-    def _add_vrs_identifier_to_data(self) -> None:
-        """Normalize variations in cancer hotspots SNV sheet and adds `vrs_identifier`
-        column to dataframe. Run manually each time variation-normalizer
-        or Cancer Hotspots releases a new version.
-        """
-        self.download_data()
-        snv_hotspots = pd.read_excel(self.data_path, sheet_name=self.og_snv_sheet_name)
-        indel_hotspots = pd.read_excel(
-            self.data_path, sheet_name=self.og_indel_sheet_name)
-        variation_normalizer = QueryHandler()
-
-        self._get_normalized_data(
-            snv_hotspots, variation_normalizer, self.new_snv_sheet_name)
-        self._get_normalized_data(
-            indel_hotspots, variation_normalizer, self.new_indel_sheet_name)
-
-        with pd.ExcelWriter(self.normalized_data_path) as writer:
-            snv_hotspots.to_excel(
-                writer, sheet_name=self.og_snv_sheet_name, index=False)
-            indel_hotspots.to_excel(
-                writer, sheet_name=self.og_indel_sheet_name, index=False)
-
-    def _get_normalized_data(self, df: pd.DataFrame,
-                             variation_normalizer: QueryHandler, df_name: str) -> None:
-        """Normalize variant and add vrs_identifier column to df
-
-        :param pd.DataFrame df: Dataframe to normalize
-        :param QueryHandler variation_normalizer: Variation Normalizer handler
-        :param str df_name: Name of df.
-            Must be either `snv_hotspots` or `indel_hotspots`
-        """
-        df["vrs_identifier"] = None
-        for i, row in df.iterrows():
-            if df_name == self.new_snv_sheet_name:
-                variation = f"{row['Hugo_Symbol']} {row['ref']}{row['Amino_Acid_Position']}{row['Variant_Amino_Acid'].split(':')[0]}"  # noqa: E501
+        if not ignore_normalized_data:
+            self.normalized_data_path = None
+            if not normalized_data_path:
+                self.get_normalized_data_path()
             else:
-                variation = f"{row['Hugo_Symbol']} {row['Variant_Amino_Acid'].split(':')[0]}"  # noqa: E501
-            try:
-                norm_vd = variation_normalizer.normalize(variation)
-            except Exception as e:
-                logger.warning(f"variation-normalizer unable to normalize {variation}: {e}")  # noqa: E501
-            else:
-                if norm_vd:
-                    norm_vd = norm_vd.dict()
-                    if norm_vd["variation"]["type"] != "Text":
-                        df.at[i, "vrs_identifier"] = norm_vd["variation"]["id"]
-                    else:
-                        logger.warning(f"variation-normalizer unable to normalize: {variation}")  # noqa: E501
+                if normalized_data_path.exists():
+                    self.normalized_data_path = normalized_data_path
                 else:
-                    logger.warning(f"variation-normalizer unable to normalize: {variation}")  # noqa: E501
+                    logger.error(f"The supplied path at `normalized_data_path`, "
+                                 f"{normalized_data_path}, for Cancer Hotspots does "
+                                 f"not exist.")
 
-    def download_data(self) -> None:
-        """Download Cancer Hotspots data."""
-        if not self.data_path.exists():
-            r = requests.get(self.data_url)
-            if r.status_code == 200:
-                with open(self.data_path, "wb") as f:
-                    f.write(r.content)
+            if not self.normalized_data_path:
+                raise FileNotFoundError(
+                    "Unable to retrieve path for normalized Cancer Hotspots data")
+
+            self.snv_hotspots = pd.read_excel(
+                self.normalized_data_path, sheet_name=self.og_snv_sheet_name)
+            self.indel_hotspots = pd.read_excel(
+                self.normalized_data_path, sheet_name=self.og_indel_sheet_name)
 
     def get_normalized_data_path(self) -> None:
         """Download latest normalized data from public s3 bucket if it does not already
