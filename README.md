@@ -7,6 +7,8 @@ Service for normalizing evidence
 The following sections include instructions specifically for developers.
 
 ### Installation
+
+#### Pipenv
 For a development install, we recommend using Pipenv. See the 
 [pipenv docs](https://pipenv-fork.readthedocs.io/en/latest/#install-pipenv-today) 
 for direction on installing pipenv in your compute environment.
@@ -16,6 +18,18 @@ Once installed, from the project root dir, just run:
 ```commandline
 pipenv shell
 pipenv lock && pipenv sync
+```
+
+#### Pip
+
+If you wish to install developer dependencies for `evidence.dev`:
+```commandline
+pip install evidence-normalizer[dev]
+```
+
+If you do not need the extra dependencies:
+```commandline
+pip install evidence-normalizer
 ```
 
 ### Backend Services
