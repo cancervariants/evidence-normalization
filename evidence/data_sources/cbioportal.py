@@ -4,8 +4,6 @@ from typing import Dict, Optional, Union
 import requests
 from bravado.client import SwaggerClient
 from bravado.exception import HTTPNotFound
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from evidence.schemas import SourceMeta, Response, Sources
 
@@ -87,34 +85,3 @@ class CBioPortal:
             data=tumor_type_totals,
             source_meta_=self.source_meta
         )
-
-    @staticmethod
-    def cancer_types_summary_graph(tumor_type_totals: Dict) -> None:
-        """Make cancer types summary graph.
-
-        :param Dict tumor_type_totals: Cancer summary data containing `count`, `total`,
-            and `percent_altered`
-        """
-        x = list()
-        y = list()
-
-        result = [
-            (k, v["percent_altered"]) for k, v in
-            sorted(tumor_type_totals.items(), key=lambda _x: _x[1]["percent_altered"],
-                   reverse=True)
-        ]
-        for k, v in result:
-            if v:
-                if v != 100:
-                    x.append(k)
-                    y.append(v)
-
-        sns.set_style("white")
-        sns.set_context("notebook")
-        sns.barplot(x[0:50], y[0:45])
-
-        plt.xticks(rotation=270)
-        plt.ylabel("% altered", labelpad=20)
-        plt.xlabel("Cancer Types")
-        plt.title("Cancer Types Summary", pad=25)
-        plt.show()
