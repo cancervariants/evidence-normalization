@@ -88,7 +88,7 @@ def normalize_cancer_hotspots_data() -> None:
 
         today = datetime.strftime(datetime.today(), "%Y%m%d")
         ch.normalized_data_path = \
-            ch.src_dir_path / f"normalized_hotspots_v{ch.source_meta.version}_{today}.xlsx"  # noqa: E501
+            ch.src_dir_path / f"normalized_hotspots_v{ch.source_meta.version}_{today}.xls"  # noqa: E501
         with pd.ExcelWriter(ch.normalized_data_path) as writer:
             snv_hotspots.to_excel(
                 writer, sheet_name=ch.og_snv_sheet_name, index=False)
