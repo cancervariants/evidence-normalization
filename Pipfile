@@ -7,9 +7,9 @@ name = "pypi"
 pydantic = "*"
 requests = "*"
 bravado = "*"
-pandas = "*"
 fastapi = "*"
 boto3 = "*"
+xlrd = "*"
 
 [dev-packages]
 evidence = {editable = true, path = "."}
@@ -26,5 +26,5 @@ ipykernel = "*"
 variation-normalizer = "*"
 click = "*"
 openpyxl = "*"
-xlrd = "*"
+pandas = "*"
 xlwt = "*"

@@ -6,9 +6,9 @@ Data URL: https://www.cancerhotspots.org/files/hotspots_v2.xls
 from os import remove
 import shutil
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
-import pandas as pd
+import xlrd
 import boto3
 from botocore.config import Config
 
@@ -64,10 +64,11 @@ class CancerHotspots:
                 raise FileNotFoundError(
                     "Unable to retrieve path for normalized Cancer Hotspots data")
 
-            self.snv_hotspots = pd.read_excel(
-                self.normalized_data_path, sheet_name=self.og_snv_sheet_name)
-            self.indel_hotspots = pd.read_excel(
-                self.normalized_data_path, sheet_name=self.og_indel_sheet_name)
+            wb = xlrd.open_workbook(self.normalized_data_path)
+            self.snv_hotspots = wb.sheet_by_name(self.og_snv_sheet_name)
+            self.snv_headers = self.snv_hotspots.row_values(0)
+            self.indel_hotspots = wb.sheet_by_name(self.og_indel_sheet_name)
+            self.indel_headers = self.indel_hotspots.row_values(0)
 
     def get_normalized_data_path(self) -> None:
         """Download latest normalized data from public s3 bucket if it does not already
@@ -116,26 +117,42 @@ class CancerHotspots:
             source_meta_=self.source_meta
         )
 
+    @staticmethod
+    def get_row(sheet: xlrd.sheet.Sheet, vrs_identifier: str) -> Optional[List]:
+        """Get row from xls sheet if vrs_identifier matches value in last column
+
+        :param xlrd.sheet.Sheet sheet: The sheet to use
+        :param str vrs_identifier: The vrs_identifier to match on
+        :return: Row represented as a list if vrs_identifier match was found, else None
+        """
+        row = None
+        for row_idx in range(1, sheet.nrows):
+            tmp_row = sheet.row_values(row_idx)
+            if tmp_row[-1] == vrs_identifier:
+                row = tmp_row
+                break
+        return row
+
     def query_snv_hotspots(self, vrs_variation_id: str) -> Optional[Dict]:
         """Return data for SNV
 
         :param str vrs_variation_id: VRS digest for variation
         :return: SNV data for vrs_variation_id
         """
-        df = self.snv_hotspots.loc[self.snv_hotspots["vrs_identifier"] == vrs_variation_id]  # noqa: E501
-        if df.empty:
+        row = self.get_row(self.snv_hotspots, vrs_variation_id)
+        if not row:
             return None
 
-        ref = df["ref"].item()
-        pos = df["Amino_Acid_Position"].item()
-        alt = df["Variant_Amino_Acid"].item()
+        ref = row[self.snv_headers.index("ref")]
+        pos = row[self.snv_headers.index("Amino_Acid_Position")]
+        alt = row[self.snv_headers.index("Variant_Amino_Acid")]
         mutation, observations = alt.split(":")
         return {
             "codon": f"{ref}{pos}",
             "mutation": f"{ref}{pos}{mutation}",
-            "q_value": df["qvalue"].item(),
+            "q_value": row[self.snv_headers.index("qvalue")],
             "observations": int(observations),
-            "total_observations": int(df["Mutation_Count"].item())
+            "total_observations": int(row[self.snv_headers.index("Mutation_Count")])
         }
 
     def query_indel_hotspots(self, vrs_variation_id: str) -> Optional[Dict]:
@@ -144,17 +161,17 @@ class CancerHotspots:
         :param str vrs_variation_id: VRS digest for variation
         :return: INDEL data for vrs_variation_id
         """
-        df = self.indel_hotspots.loc[self.indel_hotspots["vrs_identifier"] == vrs_variation_id]  # noqa: E501
-        if df.empty:
+        row = self.get_row(self.indel_hotspots, vrs_variation_id)
+        if not row:
             return None
 
-        pos = df["Amino_Acid_Position"].item()
-        alt = df["Variant_Amino_Acid"].item()
+        pos = row[self.indel_headers.index("Amino_Acid_Position")]
+        alt = row[self.indel_headers.index("Variant_Amino_Acid")]
         mutation, observations = alt.split(":")
         return {
             "codon": pos,
             "mutation": mutation,
-            "q_value": df["qvalue"].item(),
+            "q_value": row[self.indel_headers.index("qvalue")],
             "observations": int(observations),
-            "total_observations": int(df["Mutation_Count"].item())
+            "total_observations": int(row[self.indel_headers.index("Mutation_Count")])
         }
