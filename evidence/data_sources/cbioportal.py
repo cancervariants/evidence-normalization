@@ -5,10 +5,11 @@ import requests
 from bravado.client import SwaggerClient
 from bravado.exception import HTTPNotFound
 
+from evidence.data_sources.base import DataSource
 from evidence.schemas import SourceMeta, Response, Sources
 
 
-class CBioPortal:
+class CBioPortal(DataSource):
     """cBioPortal class."""
 
     def __init__(self, study_id: str = "msk_impact_2017",
@@ -54,7 +55,9 @@ class CBioPortal:
         try:
             self.cbioportal.genes.getGeneUsingGET(geneId=gene_id).result()
         except HTTPNotFound:
-            return Response(data=dict(), source_meta_=self.source_meta)
+            return self.format_response(
+                Response(data=dict(), source_meta_=self.source_meta)
+            )
 
         mutations = self.cbioportal.mutations.getMutationsInMolecularProfileBySampleListIdUsingGET(  # noqa: E501
             molecularProfileId=f"{self.study_id}_mutations",
@@ -81,7 +84,6 @@ class CBioPortal:
                     if sample_id in mutations_sample_ids:
                         tumor_type_totals[tumor_type]["count"] += 1
                 tumor_type_totals[tumor_type]["percent_altered"] = (tumor_type_totals[tumor_type]["count"] / tumor_type_totals[tumor_type]["total"]) * 100  # noqa: E501
-        return Response(
-            data=tumor_type_totals,
-            source_meta_=self.source_meta
+        return self.format_response(
+            Response(data=tumor_type_totals, source_meta_=self.source_meta)
         )

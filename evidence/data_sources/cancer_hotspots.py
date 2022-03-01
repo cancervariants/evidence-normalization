@@ -13,10 +13,11 @@ import boto3
 from botocore.config import Config
 
 from evidence import DATA_DIR_PATH, logger
+from evidence.data_sources.base import DataSource
 from evidence.schemas import SourceMeta, Response, Sources
 
 
-class CancerHotspots:
+class CancerHotspots(DataSource):
     """Class for Cancer Hotspots Data Access."""
 
     def __init__(
@@ -111,10 +112,8 @@ class CancerHotspots:
             data = self.query_snv_hotspots(vrs_variation_id)
         else:
             data = self.query_indel_hotspots(vrs_variation_id)
-
-        return Response(
-            data=data if data else dict(),
-            source_meta_=self.source_meta
+        return self.format_response(
+            Response(data=data if data else dict(), source_meta_=self.source_meta)
         )
 
     @staticmethod

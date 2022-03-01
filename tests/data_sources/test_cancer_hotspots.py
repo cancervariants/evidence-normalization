@@ -102,20 +102,23 @@ def test_hotspot_data(cancer_hotspots, braf_v600e):
     """Test that hotspot_data method works correctly."""
     resp = cancer_hotspots.mutation_hotspots(
         so_id="SO:0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
-    ).dict()
+    ).dict(by_alias=True)
+    assert resp["_id"] == "normalize.evidence:f14dcca46895ceda70ea901452dfe1d4"
     assert resp["data"] == braf_v600e
     check_source_meta(resp)
 
     # invalid vrs_variation_id
     resp = cancer_hotspots.mutation_hotspots(
         so_id="SO:0001606", vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
-    ).dict()
+    ).dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     check_source_meta(resp)
 
     # invalid so_id
     resp = cancer_hotspots.mutation_hotspots(
         so_id="SO0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
-    ).dict()
+    ).dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     check_source_meta(resp)
