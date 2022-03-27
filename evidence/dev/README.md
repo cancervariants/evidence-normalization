@@ -10,3 +10,9 @@ Requires Variation Normalization to be configured. See the [README](https://gith
 ```commandline
 python3 -m evidence.dev.cli --normalize_cancer_hotspots
 ```
+
+### Tranforming cBioPortal Data
+
+```commandline
+python3 -m evidence.dev.cli --tranform_cbioportal
+```
