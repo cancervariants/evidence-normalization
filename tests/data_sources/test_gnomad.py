@@ -113,44 +113,53 @@ def variant_id():
 
 def test_liftover_37_to_38(gnomad):
     """Test that liftover_37_to_38 method works correctly"""
-    resp = gnomad.liftover_37_to_38("7-140453136-A-T").dict()
+    resp = gnomad.liftover_37_to_38("7-140453136-A-T").dict(by_alias=True)
+    assert resp["_id"] == "normalize.evidence:8fef2753aed1b87bc2a8063ae9c3cee2"
     assert resp["data"] == {
         "gnomad_variant_id": "7-140753336-A-T",
         "reference_genome": "GRCh38",
         "dataset": "gnomad_r3"
     }
 
-    resp = gnomad.liftover_37_to_38("7-140753336-A-T").dict()
+    resp = gnomad.liftover_37_to_38("7-140753336-A-T").dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     time.sleep(5)
 
 
 def test_liftover_38_to_37(gnomad):
     """Test that liftover_38_to_37 method works correctly"""
-    resp = gnomad.liftover_38_to_37("7-140753336-A-T").dict()
+    resp = gnomad.liftover_38_to_37("7-140753336-A-T").dict(by_alias=True)
+    assert resp["_id"] == "normalize.evidence:bc01ee595593426437f8f4869a757010"
     assert resp["data"] == {
         "gnomad_variant_id": "7-140453136-A-T",
         "reference_genome": "GRCh37",
         "dataset": "gnomad_r2_1"
     }
 
-    resp = gnomad.liftover_38_to_37("7-140453136-A-T").dict()
+    resp = gnomad.liftover_38_to_37("7-140453136-A-T").dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     time.sleep(5)
 
 
 def test_clinvar_variation_id(gnomad):
     """Test that clinvar_variation_id method works correctly."""
-    resp = gnomad.clinvar_variation_id("7-140453136-A-T", "GRCh37").dict()
+    digest = "normalize.evidence:b7600c8b299c0d0dd459e53a226d3655"
+    resp = gnomad.clinvar_variation_id("7-140453136-A-T", "GRCh37").dict(by_alias=True)
+    assert resp["_id"] == digest
     assert resp["data"]["clinvar_variation_id"] == "13961"
 
-    resp = gnomad.clinvar_variation_id("7-140453136-A-T").dict()
+    resp = gnomad.clinvar_variation_id("7-140453136-A-T").dict(by_alias=True)
+    assert resp["_id"] == digest
     assert resp["data"]["clinvar_variation_id"] == "13961"
 
-    resp = gnomad.clinvar_variation_id("7-140753336-A-T", "GRCh38").dict()
+    resp = gnomad.clinvar_variation_id("7-140753336-A-T", "GRCh38").dict(by_alias=True)
+    assert resp["_id"] == digest
     assert resp["data"]["clinvar_variation_id"] == "13961"
 
-    resp = gnomad.clinvar_variation_id("7-140453136-A-T", "GRCh38").dict()
+    resp = gnomad.clinvar_variation_id("7-140453136-A-T", "GRCh38").dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     time.sleep(5)
 
@@ -204,75 +213,90 @@ def test_variant(gnomad):
 
 def test_frequency_data(gnomad, braf, tpm3, egfr_37, egfr_38):
     """Test that frequency_data method works correctly."""
+    braf_digest = "normalize.evidence:95ee6900e2cba0536113b8c97fa5f38c"
     # Asssembly 37
-    resp = gnomad.frequency_data("13961").dict()
+    resp = gnomad.frequency_data("13961").dict(by_alias=True)
+    assert resp["_id"] == braf_digest
     assert resp["data"] == braf
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r2_1"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("7-140453136-A-T").dict()
+    resp = gnomad.frequency_data("7-140453136-A-T").dict(by_alias=True)
+    assert resp["_id"] == braf_digest
     assert resp["data"] == braf
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r2_1"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("rs113488022").dict()
+    resp = gnomad.frequency_data("rs113488022").dict(by_alias=True)
+    assert resp["_id"] == braf_digest
     assert resp["data"] == braf
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r2_1"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("CA123643").dict()
+    resp = gnomad.frequency_data("CA123643").dict(by_alias=True)
+    assert resp["_id"] == braf_digest
     assert resp["data"] == braf
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r2_1"
     time.sleep(10)
 
     # Assembly 38
-    resp = gnomad.frequency_data("1-154157570-C-T").dict()
+    tpm3_digest = "normalize.evidence:1fc9c3914bb806bae4d6bcb7eb45330e"
+    resp = gnomad.frequency_data("1-154157570-C-T").dict(by_alias=True)
+    assert resp["_id"] == tpm3_digest
     assert resp["data"] == tpm3
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("CA889563985").dict()
+    resp = gnomad.frequency_data("CA889563985").dict(by_alias=True)
+    assert resp["_id"] == tpm3_digest
     assert resp["data"] == tpm3
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("rs1443960419").dict()
+    resp = gnomad.frequency_data("rs1443960419").dict(by_alias=True)
+    assert resp["_id"] == tpm3_digest
     assert resp["data"] == tpm3
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
     # both exome and genome
-    resp = gnomad.frequency_data("7-55209955-G-A").dict()
+    resp = gnomad.frequency_data("7-55209955-G-A").dict(by_alias=True)
+    assert resp["_id"] == "normalize.evidence:6c7f9cc6475e4ca8b45ae4af25b6a3c5"
     assert resp["data"] == egfr_37
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r2_1"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("7-55142262-G-A").dict()
+    egfr_38_digest = "normalize.evidence:9a6a43f898150ce20bac5716af205548"
+    resp = gnomad.frequency_data("7-55142262-G-A").dict(by_alias=True)
+    assert resp["_id"] == egfr_38_digest
     assert resp["data"] == egfr_38
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("rs368926971").dict()
+    resp = gnomad.frequency_data("rs368926971").dict(by_alias=True)
+    assert resp["_id"] == egfr_38_digest
     assert resp["data"] == egfr_38
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("CA4265128").dict()
+    resp = gnomad.frequency_data("CA4265128").dict(by_alias=True)
+    assert resp["_id"] == egfr_38_digest
     assert resp["data"] == egfr_38
     assert resp["source_meta_"]["label"] == "gnomAD"
     assert resp["source_meta_"]["version"] == "gnomad_r3"
     time.sleep(10)
 
-    resp = gnomad.frequency_data("fake").dict()
+    resp = gnomad.frequency_data("fake").dict(by_alias=True)
+    assert resp["_id"] is None
     assert resp["data"] == dict()
     assert resp["source_meta_"] == {"label": "gnomAD", "version": None}

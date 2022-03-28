@@ -8,10 +8,11 @@ import csv
 import boto3
 
 from evidence import DATA_DIR_PATH, logger
+from evidence.data_sources.base import DataSource
 from evidence.schemas import SourceMeta, Response, Sources
 
 
-class CBioPortal:
+class CBioPortal(DataSource):
     """cBioPortal class."""
 
     def __init__(
@@ -118,7 +119,8 @@ class CBioPortal:
                     mutation_sample_ids.add(sample_id)
 
         if not mutation_sample_ids:
-            return Response(data=dict(), source_meta_=self.source_meta)
+            return self.format_response(Response(data=dict(),
+                                                 source_meta_=self.source_meta))
 
         tumor_type_totals = dict()
         with open(self.transformed_case_lists_data_path) as f:
@@ -137,8 +139,5 @@ class CBioPortal:
                         if sample_id in mutation_sample_ids:
                             tumor_type_totals[tumor_type]["count"] += 1
                     tumor_type_totals[tumor_type]["percent_altered"] = (tumor_type_totals[tumor_type]["count"] / tumor_type_totals[tumor_type]["total"]) * 100  # noqa: E501
-
-        return Response(
-            data=tumor_type_totals,
-            source_meta_=self.source_meta
-        )
+        return self.format_response(Response(data=tumor_type_totals,
+                                             source_meta_=self.source_meta))

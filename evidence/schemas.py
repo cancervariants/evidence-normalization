@@ -2,8 +2,17 @@
 from enum import Enum
 from typing import Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, Extra
 from pydantic.types import StrictStr
+
+
+class Base(BaseModel):
+    """Base class for pydantic models"""
+
+    class Config:
+        """Class configs"""
+
+        extra = Extra.forbid
 
 
 class Sources(str, Enum):
@@ -14,16 +23,22 @@ class Sources(str, Enum):
     CBIOPORTAL = "cBioPortal"
 
 
-class SourceMeta(BaseModel):
+class SourceMeta(Base):
     """Metadata for sources"""
 
     label: Sources
     version: Optional[StrictStr] = None
 
 
-class Response(BaseModel):
+class Response(Base):
     """Response model"""
 
+    class Config(Base.Config):
+        """Class configs"""
+
+        allow_population_by_field_name = True
+
+    id: Optional[str] = Field(alias="_id")
     data: Dict = dict()
     source_meta_: SourceMeta
 
