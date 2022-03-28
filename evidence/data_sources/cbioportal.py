@@ -31,7 +31,8 @@ class CBioPortal:
             cbioportal case_lists file
         :param bool ignore_transformed_data: `True` if only bare init is needed. This
             is intended for developers when using the CLI to transform cbioportal data.
-            Ignores path set in `transformed_data_path`. `False` will load transformed
+            Ignores path set in `transformed_mutations_data_path` and
+            `transformed_case_lists_data_path`. `False` will load transformed
             data from s3 and load transformed excel sheet data.
         """
         self.data_url = data_url
@@ -43,7 +44,6 @@ class CBioPortal:
         )
 
         if not ignore_transformed_data:
-            self.transformed_data_path = None
             if transformed_mutations_data_path:
                 if transformed_mutations_data_path.exists():
                     self.transformed_mutations_data_path = \
