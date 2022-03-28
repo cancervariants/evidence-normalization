@@ -95,9 +95,9 @@ def braf():
             "percent_altered": 1 / 57 * 100
         },
         "Multiple Myeloma": {
-            "count": 1,
+            "count": 0,
             "total": 1,
-            "percent_altered": 1 / 1 * 100
+            "percent_altered": 0
         },
         "Small Cell Lung Cancer": {
             "count": 3,
@@ -200,9 +200,9 @@ def braf():
             "percent_altered": 5 / 165 * 100
         },
         "Cancer of Unknown Primary": {
-            "count": 11,
+            "count": 10,
             "total": 184,
-            "percent_altered": 11 / 184 * 100
+            "percent_altered": 10 / 184 * 100
         },
         "Mesothelioma": {
             "count": 0,
@@ -294,22 +294,21 @@ def braf():
 
 def test_get_mutation_data(cbioportal, braf):
     """Test that get_mutation_data method works correctly."""
-    resp = cbioportal.cancer_types_summary(673).dict(by_alias=True)
+    resp = cbioportal.cancer_types_summary("braf").dict(by_alias=True)
     data = resp["data"]
     assert data.keys() == braf.keys()
 
     total_cancer_type_count = 0
-    for k, v in data.items():
+    for _, v in data.items():
         total_cancer_type_count += v["count"]
-    assert total_cancer_type_count == 564
+    assert total_cancer_type_count == 562
 
     assert data == braf
-    assert resp["_id"] == "normalize.evidence:94297f4f120268413617bd75cb746a67"
+    assert resp["_id"] == "normalize.evidence:0d76601b070d3c9f36e9c483454adf48"
     assert resp["source_meta_"]["label"] == "cBioPortal"
-    assert resp["source_meta_"]["version"] == "1.0 (beta)"
+    assert resp["source_meta_"]["version"] == "msk_impact_2017"
 
-    resp = cbioportal.cancer_types_summary(0).dict(by_alias=True)
-    assert resp["_id"] is None
+    resp = cbioportal.cancer_types_summary("dummy").dict()
     assert resp["data"] == dict()
     assert resp["source_meta_"]["label"] == "cBioPortal"
-    assert resp["source_meta_"]["version"] == "1.0 (beta)"
+    assert resp["source_meta_"]["version"] == "msk_impact_2017"
