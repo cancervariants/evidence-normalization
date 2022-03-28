@@ -95,9 +95,9 @@ def braf():
             "percent_altered": 1 / 57 * 100
         },
         "Multiple Myeloma": {
-            "count": 1,
+            "count": 0,
             "total": 1,
-            "percent_altered": 1 / 1 * 100
+            "percent_altered": 0
         },
         "Small Cell Lung Cancer": {
             "count": 3,
@@ -200,9 +200,9 @@ def braf():
             "percent_altered": 5 / 165 * 100
         },
         "Cancer of Unknown Primary": {
-            "count": 11,
+            "count": 10,
             "total": 184,
-            "percent_altered": 11 / 184 * 100
+            "percent_altered": 10 / 184 * 100
         },
         "Mesothelioma": {
             "count": 0,
@@ -299,9 +299,9 @@ def test_get_mutation_data(cbioportal, braf):
     assert data.keys() == braf.keys()
 
     total_cancer_type_count = 0
-    for k, v in data.items():
+    for _, v in data.items():
         total_cancer_type_count += v["count"]
-    assert total_cancer_type_count == 564
+    assert total_cancer_type_count == 562
 
     assert data == braf
     assert resp["source_meta_"]["label"] == "cBioPortal"

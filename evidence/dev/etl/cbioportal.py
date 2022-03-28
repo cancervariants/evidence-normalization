@@ -30,21 +30,25 @@ class CBioPortalETL(CBioPortal):
         self,
         data_url: str = "https://cbioportal-datahub.s3.amazonaws.com/msk_impact_2017.tar.gz",  # noqa: E501
         src_dir_path: Path = DATA_DIR_PATH / "cbioportal",
-        transformed_data_path: Optional[Path] = None,
-        ignore_transformed_data: bool = True
+        transformed_mutations_data_path: Optional[Path] = None,
+        transformed_case_lists_data_path: Optional[Path] = None,
+        ignore_transformed_data: bool = False
     ) -> None:
         """Initialize cbioportal etl class
 
         :param str data_url: URL to data file
         :param Path src_dir_path: Path to cbioportal data directory
-        :param Optional[Path] transformed_data_path: Path to transformed cbioportal file
+        :param Optional[Path] transformed_mutations_data_path: Path to transformed
+            cbioportal mutations file
+        :param Optional[Path] transformed_case_lists_data_path: Path to transformed
+            cbioportal case_lists file
         :param bool ignore_transformed_data: `True` if only bare init is needed. This
             is intended for developers when using the CLI to transform cbioportal data.
             Ignores path set in `transformed_data_path`. `False` will load transformed
             data from s3 and load transformed excel sheet data.
         """
-        super().__init__(data_url, src_dir_path, transformed_data_path,
-                         ignore_transformed_data)
+        super().__init__(data_url, src_dir_path, transformed_mutations_data_path,
+                         transformed_case_lists_data_path, ignore_transformed_data)
         self.src_dir_etl_path = ETL_DATA_DIR_PATH / "cbioportal"
         self.src_dir_etl_path.mkdir(exist_ok=True, parents=True)
         self.msk_impact_2017_dir = None
@@ -58,7 +62,7 @@ class CBioPortalETL(CBioPortal):
             self.msk_impact_2017_dir = self.src_dir_etl_path / "msk_impact_2017"
 
     def transform_data(self) -> None:
-        """Transform cbioportal data and write to excel sheet"""
+        """Transform cbioportal data and write to csv files"""
         if not self.msk_impact_2017_dir:
             self.download_data()
 
@@ -68,13 +72,11 @@ class CBioPortalETL(CBioPortal):
         case_lists_df = self.create_case_lists_df()
         mutations_df = self.create_mutations_df()
 
-        xls_path = self.src_dir_path / "msk_impact_2017.xls"
-        with pd.ExcelWriter(xls_path) as writer:
-            case_lists_df.to_excel(writer, sheet_name="case_lists")
-            mutations_df.to_excel(writer, sheet_name="mutations")
-
-        logger.info(f"Successfully transformed cBioPortal data. "
-                    f"Transformed data can be found at: {xls_path}")
+        case_lists_data_path = self.src_dir_path / "msk_impact_2017_case_lists.csv"
+        mutations_data_path = self.src_dir_path / "msk_impact_2017_mutations.csv"
+        case_lists_df.to_csv(case_lists_data_path)
+        mutations_df.to_csv(mutations_data_path)
+        logger.info("Successfully transformed cBioPortal data.")
 
     def create_case_lists_df(self) -> pd.DataFrame:
         """Create case lists data frame
@@ -96,7 +98,5 @@ class CBioPortalETL(CBioPortal):
 
         :return: Dataframe containing mutation data
         """
-        df = pd.read_csv(f"{self.msk_impact_2017_dir}/data_mutations.txt",
-                         sep="\t", skiprows=1)
-        df = df.dropna(axis=1, how="all")
-        return df
+        return pd.read_csv(f"{self.msk_impact_2017_dir}/data_mutations.txt",
+                           sep="\t", skiprows=1)
