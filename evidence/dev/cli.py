@@ -27,17 +27,17 @@ def cli(normalize_cancer_hotspots: bool, transform_cbioportal: bool) -> None:
     :param bool transform_cbioportal: Determines whether or not to transform cBioPortal
         data
     """
-    if normalize_cancer_hotspots:
-        c = CancerHotspotsETL()
-        try:
-            c.add_vrs_identifier_to_data()
-        except CancerHotspotsETLException as e:
-            click.echo(e)
     if transform_cbioportal:
         c = CBioPortalETL()
         try:
             c.transform_data()
         except CBioPortalETLException as e:
+            click.echo(e)
+    if normalize_cancer_hotspots:
+        c = CancerHotspotsETL()
+        try:
+            c.add_vrs_identifier_to_data()
+        except CancerHotspotsETLException as e:
             click.echo(e)
 
 
