@@ -43,6 +43,8 @@ class CBioPortal(DataSource):
             label=Sources.CBIOPORTAL,
             version="msk_impact_2017"
         )
+        self.transformed_mutations_data_path = None
+        self.transformed_case_lists_data_path = None
 
         if not ignore_transformed_data:
             if transformed_mutations_data_path:
@@ -81,8 +83,8 @@ class CBioPortal(DataSource):
         if it does not already exist in data directory and set the corresponding
         data path
 
-        :param bool is_mutations: `True` if getting mutations data false. `False` if
-            getting case_lists data path
+        :param bool is_mutations: `True` if getting mutations data. `False` if
+            getting case_lists data
         """
         data_type = "mutations" if is_mutations else "case_lists"
         logger.info(f"Retrieving transformed {data_type} data from s3 bucket...")

@@ -21,8 +21,6 @@ logging.basicConfig(
 logger = logging.getLogger("evidence")
 logger.setLevel(logging.DEBUG)
 
-logging.getLogger("bravado").setLevel(logging.INFO)
-logging.getLogger("bravado_core").setLevel(logging.INFO)
 logging.getLogger("boto3").setLevel(logging.INFO)
 logging.getLogger("botocore").setLevel(logging.INFO)
 logging.getLogger("python_jsonschema_objects").setLevel(logging.INFO)

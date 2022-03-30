@@ -6,9 +6,9 @@ Data URL: https://www.cancerhotspots.org/files/hotspots_v2.xls
 from os import remove
 import shutil
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
+import csv
 
-import xlrd
 import boto3
 from botocore.config import Config
 
@@ -23,15 +23,18 @@ class CancerHotspots(DataSource):
     def __init__(
         self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
         src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
-        normalized_data_path: Optional[Path] = None,
+        snv_normalized_data_path: Optional[Path] = None,
+        indel_normalized_data_path: Optional[Path] = None,
         ignore_normalized_data: bool = False
     ) -> None:
         """Initialize Cancer Hotspots class
 
         :param str data_url: URL to data file
         :param Path src_dir_path: Path to cancer hotspots data directory
-        :param Optional[Path] normalized_data_path: Path to normalized cancer
-            hotspots file
+        :param Optional[Path] snv_normalized_data_path: Path to normalized cancer
+            hotspots SNV file
+        :param Optional[Path] indel_normalized_data_path: Path to normalized cancer
+            hotspots INDEL file
         :param bool ignore_normalized_data: `True` if only bare init is needed. This
             is intended for developers when using the CLI to normalize cancer hotspots
             data. Ignores path set in `normalized_data_path`.
@@ -39,46 +42,54 @@ class CancerHotspots(DataSource):
             excel sheet data.
         """
         self.data_url = data_url
-        fn = self.data_url.split("/")[-1]
         self.src_dir_path = src_dir_path
         self.src_dir_path.mkdir(exist_ok=True, parents=True)
-        self.data_path = self.src_dir_path / fn
-        self.og_snv_sheet_name = "SNV-hotspots"
-        self.og_indel_sheet_name = "INDEL-hotspots"
-        self.new_snv_sheet_name = "snv_hotspots"
-        self.new_indel_sheet_name = "indel_hotspots"
+
         self.source_meta = SourceMeta(label=Sources.CANCER_HOTSPOTS, version="2")
+        self.snv_normalized_data_path = None
+        self.indel_normalized_data_path = None
 
         if not ignore_normalized_data:
-            self.normalized_data_path = None
-            if not normalized_data_path:
-                self.get_normalized_data_path()
-            else:
-                if normalized_data_path.exists():
-                    self.normalized_data_path = normalized_data_path
+            if snv_normalized_data_path:
+                if snv_normalized_data_path.exists():
+                    self.snv_normalized_data_path = snv_normalized_data_path
                 else:
-                    logger.error(f"The supplied path at `normalized_data_path`, "
-                                 f"{normalized_data_path}, for Cancer Hotspots does "
-                                 f"not exist.")
+                    logger.error(f"The supplied path at `snv_normalized_data_path`, "
+                                 f"{snv_normalized_data_path}, for Cancer Hotspots "
+                                 f"does not exist.")
+            else:
+                self.get_normalized_data_path(is_snv=True)
 
-            if not self.normalized_data_path:
-                raise FileNotFoundError(
-                    "Unable to retrieve path for normalized Cancer Hotspots data")
+            if not self.snv_normalized_data_path:
+                raise FileNotFoundError("Unable to retrieve path for normalized "
+                                        "Cancer Hotspots SNV data")
 
-            wb = xlrd.open_workbook(self.normalized_data_path)
-            self.snv_hotspots = wb.sheet_by_name(self.og_snv_sheet_name)
-            self.snv_headers = self.snv_hotspots.row_values(0)
-            self.indel_hotspots = wb.sheet_by_name(self.og_indel_sheet_name)
-            self.indel_headers = self.indel_hotspots.row_values(0)
+            if indel_normalized_data_path:
+                if indel_normalized_data_path.exists():
+                    self.indel_normalized_data_path = indel_normalized_data_path
+                else:
+                    logger.error(f"The supplied path at `indel_normalized_data_path`, "
+                                 f"{indel_normalized_data_path}, for Cancer Hotspots "
+                                 f"does not exist.")
+            else:
+                self.get_normalized_data_path(is_snv=False)
 
-    def get_normalized_data_path(self) -> None:
-        """Download latest normalized data from public s3 bucket if it does not already
-        exist in data dir and set normalized_data_path
+            if not self.indel_normalized_data_path:
+                raise FileNotFoundError("Unable to retrieve path for normalized "
+                                        "Cancer Hotspots INDEL data")
+
+    def get_normalized_data_path(self, is_snv: bool = True) -> None:
+        """Download Cancer Hotspots SNV and INDEL data from public s3 bucket if it
+        does not already exist in data directory and set the corresponding data path
+
+        :param bool is_snv: `True` if getting SNV data. `False` if getting INDEL data
         """
-        logger.info("Retrieving normalized data from s3 bucket...")
+        data_type = "snv" if is_snv else "indel"
+        logger.info(f"Retrieving normalized {data_type} data from s3 bucket...")
         s3 = boto3.resource("s3", config=Config(region_name="us-east-2"))
-        bucket = sorted(list(s3.Bucket("vicc-normalizers").objects.filter(
-            Prefix="evidence_normalization/cancer_hotspots/normalized_hotspots_v").all()), key=lambda o: o.key)  # noqa: E501
+        prefix = \
+            f"evidence_normalization/cancer_hotspots/normalized_{data_type}_hotspots_v"
+        bucket = sorted(list(s3.Bucket("vicc-normalizers").objects.filter(Prefix=prefix).all()), key=lambda o: o.key)  # noqa: E501
         if len(bucket) > 0:
             obj = bucket.pop().Object()
             obj_s3_path = obj.key
@@ -91,13 +102,18 @@ class CancerHotspots(DataSource):
                     obj.download_fileobj(f)
                 shutil.unpack_archive(zip_path, self.src_dir_path)
                 remove(zip_path)
-                logger.info("Successfully downloaded normalized Cancer Hotspots data")
+                logger.info(f"Successfully downloaded normalized Cancer Hotspots "
+                            f"{data_type} data")
             else:
-                logger.info("Latest normalized Cancer Hotspots data already exists")
-            self.normalized_data_path = normalized_data_path
+                logger.info(f"Latest normalized Cancer Hotspots {data_type} data "
+                            f"already exists")
+            if is_snv:
+                self.snv_normalized_data_path = normalized_data_path
+            else:
+                self.indel_normalized_data_path = normalized_data_path
         else:
-            logger.warning("Could not find normalized Cancer Hotspots"
-                           " data in vicc-normalizers s3 bucket")
+            logger.warning(f"Could not find normalized Cancer Hotspots {data_type}"
+                           f" data in vicc-normalizers s3 bucket")
 
     def mutation_hotspots(self, so_id: str, vrs_variation_id: str) -> Response:
         """Get cancer hotspot data for a variant
@@ -117,20 +133,25 @@ class CancerHotspots(DataSource):
         )
 
     @staticmethod
-    def get_row(sheet: xlrd.sheet.Sheet, vrs_identifier: str) -> Optional[List]:
+    def get_row(normalized_data_path: Path,
+                vrs_identifier: str) -> Tuple[Optional[List], Optional[List]]:
         """Get row from xls sheet if vrs_identifier matches value in last column
 
-        :param xlrd.sheet.Sheet sheet: The sheet to use
+        :param Path normalized_data_path: Path to normalized data file
         :param str vrs_identifier: The vrs_identifier to match on
-        :return: Row represented as a list if vrs_identifier match was found, else None
+        :return: Row represented as a list if vrs_identifier match was found and
+            headers if match was found
         """
-        row = None
-        for row_idx in range(1, sheet.nrows):
-            tmp_row = sheet.row_values(row_idx)
-            if tmp_row[-1] == vrs_identifier:
-                row = tmp_row
-                break
-        return row
+        matched_row = None
+        headers = None
+        with open(normalized_data_path) as f:
+            data = csv.reader(f)
+            headers = next(data)
+            for row in data:
+                if row[headers.index("vrs_identifier")] == vrs_identifier:
+                    matched_row = row
+                    break
+        return matched_row, headers
 
     def query_snv_hotspots(self, vrs_variation_id: str) -> Optional[Dict]:
         """Return data for SNV
@@ -138,20 +159,20 @@ class CancerHotspots(DataSource):
         :param str vrs_variation_id: VRS digest for variation
         :return: SNV data for vrs_variation_id
         """
-        row = self.get_row(self.snv_hotspots, vrs_variation_id)
+        row, headers = self.get_row(self.snv_normalized_data_path, vrs_variation_id)
         if not row:
             return None
 
-        ref = row[self.snv_headers.index("ref")]
-        pos = row[self.snv_headers.index("Amino_Acid_Position")]
-        alt = row[self.snv_headers.index("Variant_Amino_Acid")]
+        ref = row[headers.index("ref")]
+        pos = row[headers.index("Amino_Acid_Position")]
+        alt = row[headers.index("Variant_Amino_Acid")]
         mutation, observations = alt.split(":")
         return {
             "codon": f"{ref}{pos}",
             "mutation": f"{ref}{pos}{mutation}",
-            "q_value": row[self.snv_headers.index("qvalue")],
+            "q_value": float(row[headers.index("qvalue")]),
             "observations": int(observations),
-            "total_observations": int(row[self.snv_headers.index("Mutation_Count")])
+            "total_observations": int(row[headers.index("Mutation_Count")])
         }
 
     def query_indel_hotspots(self, vrs_variation_id: str) -> Optional[Dict]:
@@ -160,17 +181,17 @@ class CancerHotspots(DataSource):
         :param str vrs_variation_id: VRS digest for variation
         :return: INDEL data for vrs_variation_id
         """
-        row = self.get_row(self.indel_hotspots, vrs_variation_id)
+        row, headers = self.get_row(self.indel_normalized_data_path, vrs_variation_id)
         if not row:
             return None
 
-        pos = row[self.indel_headers.index("Amino_Acid_Position")]
-        alt = row[self.indel_headers.index("Variant_Amino_Acid")]
+        pos = row[headers.index("Amino_Acid_Position")]
+        alt = row[headers.index("Variant_Amino_Acid")]
         mutation, observations = alt.split(":")
         return {
             "codon": pos,
             "mutation": mutation,
-            "q_value": row[self.indel_headers.index("qvalue")],
+            "q_value": float(row[headers.index("qvalue")]),
             "observations": int(observations),
-            "total_observations": int(row[self.indel_headers.index("Mutation_Count")])
+            "total_observations": int(row[headers.index("Mutation_Count")])
         }
