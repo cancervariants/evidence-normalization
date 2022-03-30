@@ -60,6 +60,9 @@ class CBioPortalETL(CBioPortal):
             file = tarfile.open(fileobj=response.raw, mode="r|gz")
             file.extractall(path=self.src_dir_etl_path)
             self.msk_impact_2017_dir = self.src_dir_etl_path / "msk_impact_2017"
+        else:
+            logger.error(f"Unable to download cBioPortal data. "
+                         f"Received status code: {response.status_code}")
 
     def transform_data(self) -> None:
         """Transform cbioportal data and write to csv files"""

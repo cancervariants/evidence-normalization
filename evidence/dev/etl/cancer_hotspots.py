@@ -44,6 +44,9 @@ class CancerHotspotsETL(CancerHotspots):
             if r.status_code == 200:
                 with open(self.data_path, "wb") as f:
                     f.write(r.content)
+            else:
+                logger.error(f"Unable to download Cancer Hotspots data. "
+                             f"Received status code: {r.status_code}")
 
     def add_vrs_identifier_to_data(self) -> None:
         """Normalize variations in cancer hotspots SNV sheet and adds `vrs_identifier`
