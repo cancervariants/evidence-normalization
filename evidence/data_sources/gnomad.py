@@ -4,11 +4,12 @@ from typing import Dict, Optional
 
 import requests
 
+from evidence.data_sources.base import DataSource
 from evidence.schemas import SourceMeta, Response, GnomadDataset, \
     ReferenceGenome, Sources
 
 
-class GnomAD:
+class GnomAD(DataSource):
     """gnomAD class."""
 
     def __init__(self) -> None:
@@ -108,7 +109,9 @@ class GnomAD:
         }
         resp = self.query(query, variables)
         if "errors" in resp or len(resp["data"]["liftover"]) == 0:
-            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
         else:
             liftover = resp["data"]["liftover"][0]["liftover"]
             data = {
@@ -116,7 +119,9 @@ class GnomAD:
                 "reference_genome": liftover["reference_genome"],
                 "dataset": self.datasets[0]
             }
-            return Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
 
     def liftover_38_to_37(self, gnomad_variant_id: str) -> Response:
         """Liftover 38 to 37
@@ -142,7 +147,9 @@ class GnomAD:
         }
         resp = self.query(query, variables)
         if "errors" in resp or len(resp["data"]["liftover"]) == 0:
-            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
         else:
             liftover = resp["data"]["liftover"][0]["source"]
             data = {
@@ -150,7 +157,9 @@ class GnomAD:
                 "reference_genome": liftover["reference_genome"],
                 "dataset": self.datasets[1]
             }
-            return Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(data=data, source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
 
     def clinvar_variation_id(self, gnomad_variant_id: str,
                              reference_genome: ReferenceGenome = None) -> Response:
@@ -186,10 +195,14 @@ class GnomAD:
                 if "errors" not in resp:
                     break
         if resp and "errors" not in resp:
-            return Response(data=resp["data"]["clinvar_variant"],
-                            source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(data=resp["data"]["clinvar_variant"],
+                         source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
         else:
-            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
 
     def variant_id_to_gnomad_id(
             self, variant_id: str,
@@ -341,7 +354,9 @@ class GnomAD:
         }
         variant_id_resp = self.variant_id_to_gnomad_id(variant_id, reference_genome)
         if "errors" in variant_id_resp or len(variant_id_resp["data"]["variant_search"]) == 0:  # noqa: E501
-            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
 
         variant_id = variant_id_resp["data"]["variant_search"][0]["variant_id"]
         if not reference_genome:
@@ -350,7 +365,9 @@ class GnomAD:
 
         variant_resp = self.variant(variant_id, reference_genome)
         if "errors" in variant_resp:
-            return Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            return self.format_response(
+                Response(source_meta_=SourceMeta(label=Sources.GNOMAD))
+            )
         gnomad_frequency_resp = variant_resp["data"]["variant"]
         data["variant"] = gnomad_frequency_resp["variantId"]
         data["assembly"] = gnomad_frequency_resp["reference_genome"]
@@ -385,7 +402,7 @@ class GnomAD:
                 max_pop_freq[response_label] = f"{(max_pop_freq[response_label]):.9f}"
             data["max_pop_freq"][response_label] = max_pop_freq[max_pop_freq_label]
 
-        return Response(
-            data=data,
-            source_meta_=SourceMeta(label=Sources.GNOMAD, version=dataset)
+        return self.format_response(
+            Response(data=data,
+                     source_meta_=SourceMeta(label=Sources.GNOMAD, version=dataset))
         )

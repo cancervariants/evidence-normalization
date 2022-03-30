@@ -8,6 +8,7 @@ exclude =
   source
   outputs
   evidence/version.py
+  build/*
 inline-quotes = "
 import-order-style = pep8
 application-import-names =
