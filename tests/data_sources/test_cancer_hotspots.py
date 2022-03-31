@@ -59,7 +59,7 @@ def test_query_indel_hotspots(cancer_hotspots):
     assert resp == {
         "codon": "486-494",
         "mutation": "N486_A489delinsK",
-        "q_value": 3.950065372677611e-09,
+        "q_value": 3.9500653726776106e-09,
         "observations": 1,
         "total_observations": 7
     }
@@ -70,14 +70,14 @@ def test_query_indel_hotspots(cancer_hotspots):
     assert resp == {
         "codon": "486-494",
         "mutation": "N486_P490del",
-        "q_value": 3.950065372677611e-09,
+        "q_value": 3.9500653726776106e-09,
         "observations": 3,
         "total_observations": 7
     }
 
     # TP53 I255del
     resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA._vUTgjJ8TUV6lh0ol0fHkf3ptwOWYU_W")
+        "ga4gh:VA.jH5IPQRfICPyoSpeRT2C8Zu36gEnUUis")
     assert resp == {
         "codon": "229-292",
         "mutation": "I255del",
