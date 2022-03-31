@@ -1,8 +1,11 @@
 """Module for the base data source class"""
 import json
 import hashlib
+from pathlib import Path
+from typing import Optional
 
-from evidence.schemas import Response
+from evidence import logger
+from evidence.schemas import Response, SourceDataType
 
 
 class DataSource:
@@ -22,3 +25,52 @@ class DataSource:
             digest = hashlib.md5(blob)
             resp.id = f"normalize.evidence:{digest.hexdigest()}"
         return resp
+
+
+class DownloadableDataSource(DataSource):
+    """A base class for sources that use downloadable data"""
+
+    def __init__(self, data_url: str, src_dir_path: Path,
+                 ignore_transformed_data: bool) -> None:
+        """Initialize DownloadableDataSource class
+
+        :param str data_url: URL to data file
+        :param Path src_dir_path: Path to source data directory
+        :param bool ignored_transformed_data: `True` if only bare init is needed. This
+            is intended for developers when using the CLI to transform source data.
+            `False` will load the transformed data from s3
+        """
+        self.data_url = data_url
+        self.src_dir_path = src_dir_path
+        self.src_dir_path.mkdir(exist_ok=True, parents=True)
+        self.ignore_transformed_data = ignore_transformed_data
+
+    def download_s3_data(self, src_data_type: SourceDataType) -> Path:
+        """Download data from public s3 bucket if it does not already exist in data
+        directory and set the corresponding data path
+
+        :param SourceDataType src_data_type: The data type contained in the
+            transformed data file
+        """
+        raise NotImplementedError
+
+    def get_transformed_data_path(self, transformed_data_path: Path,
+                                  src_data_type: SourceDataType) -> Optional[Path]:
+        """Get transformed data path for source
+
+        :param Path transformed_data_path: The path to the transformed data file
+        :param SourceDataType src_data_type: The data type contained in the
+            transformed data file
+        :return: Path to transformed data file
+        """
+        data_path = None
+        if not self.ignore_transformed_data:
+            if transformed_data_path:
+                if transformed_data_path.exists():
+                    data_path = transformed_data_path
+                else:
+                    logger.error(f"The supplied path at {transformed_data_path} "
+                                 f"does not exist.")
+            else:
+                data_path = self.download_s3_data(src_data_type)
+        return data_path

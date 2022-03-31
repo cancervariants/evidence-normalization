@@ -57,3 +57,12 @@ class ReferenceGenome(str, Enum):
     # MUST put in descending assembly
     GRCH38 = "GRCh38"
     GRCH37 = "GRCh37"
+
+
+class SourceDataType(str, Enum):
+    """Define constraints for source data type for data file"""
+
+    CANCER_HOTSPOTS_SNV = "snv"
+    CANCER_HOTSPOTS_INDEL = "indel"
+    CBIOPORTAL_CASE_LISTS = "case_lists"
+    CBIOPORTAL_MUTATIONS = "mutations"

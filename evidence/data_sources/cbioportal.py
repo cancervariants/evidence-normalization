@@ -8,11 +8,11 @@ import csv
 import boto3
 
 from evidence import DATA_DIR_PATH, logger
-from evidence.data_sources.base import DataSource
-from evidence.schemas import SourceMeta, Response, Sources
+from evidence.data_sources.base import DownloadableDataSource
+from evidence.schemas import SourceDataType, SourceMeta, Response, Sources
 
 
-class CBioPortal(DataSource):
+class CBioPortal(DownloadableDataSource):
     """cBioPortal class."""
 
     def __init__(
@@ -34,56 +34,30 @@ class CBioPortal(DataSource):
             is intended for developers when using the CLI to transform cbioportal data.
             Ignores path set in `transformed_mutations_data_path` and
             `transformed_case_lists_data_path`. `False` will load transformed
-            data from s3 and load transformed excel sheet data.
+            data from s3
         """
-        self.data_url = data_url
-        self.src_dir_path = src_dir_path
-        self.src_dir_path.mkdir(exist_ok=True, parents=True)
+        super().__init__(data_url, src_dir_path, ignore_transformed_data)
         self.source_meta = SourceMeta(
             label=Sources.CBIOPORTAL,
             version="msk_impact_2017"
         )
+        self.transformed_mutations_data_path = self.get_transformed_data_path(
+            transformed_mutations_data_path, SourceDataType.CBIOPORTAL_MUTATIONS)
+        self.transformed_case_lists_data_path = self.get_transformed_data_path(
+            transformed_case_lists_data_path, SourceDataType.CBIOPORTAL_CASE_LISTS)
 
-        if not ignore_transformed_data:
-            if transformed_mutations_data_path:
-                if transformed_mutations_data_path.exists():
-                    self.transformed_mutations_data_path = \
-                        transformed_mutations_data_path
-                else:
-                    logger.error(f"The supplied path at `transformed_mutations_data_"
-                                 f"path`, {transformed_mutations_data_path}, for "
-                                 f"cBioPortal does not exist.")
-            else:
-                self.get_transformed_data_path(is_mutations=True)
-
-            if not self.transformed_mutations_data_path:
-                raise FileNotFoundError(
-                    "Unable to retrieve path for transformed cBioPortal mutations data")
-
-            if transformed_case_lists_data_path:
-                if transformed_case_lists_data_path.exists():
-                    self.transformed_case_lists_data_path = \
-                        transformed_case_lists_data_path
-                else:
-                    logger.error(f"The supplied path at `transformed_case_lists_data_"
-                                 f"path`, {transformed_case_lists_data_path}, for "
-                                 f"cBioPortal does not exist.")
-            else:
-                self.get_transformed_data_path(is_mutations=False)
-
-            if not self.transformed_case_lists_data_path:
-                raise FileNotFoundError(
-                    "Unable to retrieve path for transformed cBioPortal case_lists"
-                    " data")
-
-    def get_transformed_data_path(self, is_mutations: bool = True) -> None:
+    def download_s3_data(
+        self, src_data_type: SourceDataType = SourceDataType.CBIOPORTAL_MUTATIONS
+    ) -> Path:
         """Download MSK Impact 2017 mutation and case_lists data from public s3 bucket
         if it does not already exist in data directory and set the corresponding
         data path
 
-        :param bool is_mutations: `True` if getting mutations data false. `False` if
-            getting case_lists data path
+        :param SourceDataType src_data_type: The data type contained in the
+            transformed data file
+        :return: Path to transformed data file
         """
+        is_mutations = src_data_type == SourceDataType.CBIOPORTAL_MUTATIONS
         data_type = "mutations" if is_mutations else "case_lists"
         logger.info(f"Retrieving transformed {data_type} data from s3 bucket...")
         s3 = boto3.client("s3")
@@ -96,10 +70,7 @@ class CBioPortal(DataSource):
         remove(zip_path)
         logger.info(f"Successfully downloaded transformed cBioPortal {data_type} data")
         data_path = self.src_dir_path / zip_fn[:-4]
-        if is_mutations:
-            self.transformed_mutations_data_path = data_path
-        else:
-            self.transformed_case_lists_data_path = data_path
+        return data_path
 
     def cancer_types_summary(self, hgnc_symbol: str) -> Response:
         """Get cancer types with gene mutations data
