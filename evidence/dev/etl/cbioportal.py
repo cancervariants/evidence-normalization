@@ -46,7 +46,7 @@ class CBioPortalETL(CBioPortal):
             is intended for developers when using the CLI to transform cbioportal data.
             Ignores paths set in `transformed_mutations_data_path` and
             `transformed_case_lists_data_path`. `False` will load transformed
-            data from s3 and load transformed excel sheet data.
+            data from s3
         """
         super().__init__(data_url, src_dir_path, transformed_mutations_data_path,
                          transformed_case_lists_data_path, ignore_transformed_data)

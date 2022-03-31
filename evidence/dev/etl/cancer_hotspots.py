@@ -44,8 +44,7 @@ class CancerHotspotsETL(CancerHotspots):
         :param bool ignore_transformed_data: `True` if only bare init is needed. This
             is intended for developers when using the CLI to normalize cancer hotspots
             data. Ignores paths set in `snv_transformed_data_path` and
-            `indel_transformed_data_path`. `False` will load transformed data from
-            s3 and load transformed excel sheet data.
+            `indel_transformed_data_path`. `False` will load transformed data from s3
         """
         super().__init__(
             data_url, src_dir_path, snv_transformed_data_path,
