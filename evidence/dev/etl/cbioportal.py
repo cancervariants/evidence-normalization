@@ -32,7 +32,7 @@ class CBioPortalETL(CBioPortal):
         src_dir_path: Path = DATA_DIR_PATH / "cbioportal",
         transformed_mutations_data_path: Optional[Path] = None,
         transformed_case_lists_data_path: Optional[Path] = None,
-        ignore_transformed_data: bool = False
+        ignore_transformed_data: bool = True
     ) -> None:
         """Initialize cbioportal etl class
 
@@ -44,7 +44,8 @@ class CBioPortalETL(CBioPortal):
             cbioportal case_lists file
         :param bool ignore_transformed_data: `True` if only bare init is needed. This
             is intended for developers when using the CLI to transform cbioportal data.
-            Ignores path set in `transformed_data_path`. `False` will load transformed
+            Ignores paths set in `transformed_mutations_data_path` and
+            `transformed_case_lists_data_path`. `False` will load transformed
             data from s3 and load transformed excel sheet data.
         """
         super().__init__(data_url, src_dir_path, transformed_mutations_data_path,

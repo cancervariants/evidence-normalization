@@ -8,10 +8,10 @@ from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
 
 @click.command()
 @click.option(
-    "--normalize_cancer_hotspots",
+    "--transform_cancer_hotspots",
     is_flag=True,
     default=False,
-    help="Normalize Cancer Hotspots data"
+    help="Transform Cancer Hotspots data"
 )
 @click.option(
     "--transform_cbioportal",
@@ -19,26 +19,48 @@ from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
     default=False,
     help="Transform cBioPortal data"
 )
-def cli(normalize_cancer_hotspots: bool, transform_cbioportal: bool) -> None:
+@click.option(
+    "--transform_all",
+    is_flag=True,
+    default=False,
+    help="Transforms all source data, currently cBioPortal and Cancer Hotspots"
+)
+def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
+        transform_all: bool) -> None:
     """Execute CLI methods
 
-    :param bool normalize_cancer_hotspots: Determines whether or not to normalize
+    :param bool transform_cancer_hotspots: Determines whether or not to transform
         Cancer Hotspots data
     :param bool transform_cbioportal: Determines whether or not to transform cBioPortal
         data
+    :param bool transform_all: Transforms all source data
     """
-    if transform_cbioportal:
-        c = CBioPortalETL()
-        try:
-            c.transform_data()
-        except CBioPortalETLException as e:
-            click.echo(e)
-    if normalize_cancer_hotspots:
-        c = CancerHotspotsETL()
-        try:
-            c.add_vrs_identifier_to_data()
-        except CancerHotspotsETLException as e:
-            click.echo(e)
+    if transform_all:
+        transform_cbioportal_data()
+        transform_cancer_hotspots_data()
+    else:
+        if transform_cbioportal:
+            transform_cbioportal_data()
+        if transform_cancer_hotspots:
+            transform_cancer_hotspots_data()
+
+
+def transform_cbioportal_data() -> None:
+    """Transform cBioPortal data"""
+    c = CBioPortalETL()
+    try:
+        c.transform_data()
+    except CBioPortalETLException as e:
+        click.echo(e)
+
+
+def transform_cancer_hotspots_data() -> None:
+    """Transform Cancer Hotspots data"""
+    c = CancerHotspotsETL()
+    try:
+        c.add_vrs_identifier_to_data()
+    except CancerHotspotsETLException as e:
+        click.echo(e)
 
 
 if __name__ == "__main__":
