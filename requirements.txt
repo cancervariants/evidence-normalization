@@ -7,11 +7,11 @@
 
 -i https://pypi.org/simple
 anyio==3.5.0; python_full_version >= '3.6.2'
-boto3==1.21.29
-botocore==1.24.29; python_version >= '3.6'
+boto3==1.21.34
+botocore==1.24.34; python_version >= '3.6'
 certifi==2021.10.8
 charset-normalizer==2.0.12; python_version >= '3'
-fastapi==0.75.0
+fastapi==0.75.1
 idna==3.3; python_version >= '3'
 jmespath==1.0.0; python_version >= '3.7'
 pydantic==1.9.0
