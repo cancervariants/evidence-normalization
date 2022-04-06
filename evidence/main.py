@@ -1,13 +1,13 @@
 """Main application for FastAPI."""
-import html
 from typing import Dict, Optional
+from urllib.parse import unquote
 
 from fastapi import FastAPI, Query
 from fastapi.openapi.utils import get_openapi
 
 from evidence.data_sources import CancerHotspots, CBioPortal, GnomAD
 from evidence.version import __version__
-from evidence.schemas import Response
+from evidence.schemas import ReferenceGenome, Response
 
 gnomad = GnomAD()
 cbioportal = CBioPortal()
@@ -56,24 +56,23 @@ def get_cancer_hotspots(
 
     :return: Cancer Hotspot data
     """
-    return cancer_hotspots.mutation_hotspots(
-        html.unescape(so_id), html.unescape(vrs_variation_id))
+    return cancer_hotspots.mutation_hotspots(unquote(so_id), unquote(vrs_variation_id))
 
 
 @app.get("/evidence/cbioportal/cancer_types_summary",
-         summary="Given entrez ID for a gene, return cancer types summary.",
+         summary="Given HGNC gene symbol, return cancer types summary.",
          response_description=RESPONSE_DESCRIPTION,
          description="Return cancer types with gene mutations.",
          response_model=Response)
 def get_cancer_types_summary(
-    entrez_gene_id: str = Query(..., description="Entrez ID for gene.")
+    hgnc_symbol: str = Query(..., description="HGNC gene symbol.")
 ) -> Response:
     """Return cancer types with gene mutations.
 
-    :param str entrez_gene_id: Enetrez ID for gene
-    :return: Return cancer types with `entrez_gene_id` mutations
+    :param str hgnc_symbol: HGNC gene symbol
+    :return: Return cancer types with `hgnc_symbol` mutations
     """
-    return cbioportal.cancer_types_summary(entrez_gene_id)
+    return cbioportal.cancer_types_summary(hgnc_symbol)
 
 
 @app.get("/evidence/gnomad/liftover/38_to_37",
@@ -123,8 +122,7 @@ def get_clinvar_variation_id(
     :param Optional[str] reference_genome: GRCh37 or GRCh38
     :return: Clinvar variant ID
     """
-    return gnomad.clinvar_variation_id(html.unescape(gnomad_variant_id),
-                                       reference_genome)
+    return gnomad.clinvar_variation_id(unquote(gnomad_variant_id), reference_genome)
 
 
 @app.get("/evidence/gnomad/frequency_data",
@@ -136,10 +134,12 @@ def get_gnomad_frequency(
     variant_id: str = Query(
         None,
         description="gnomAD variant ID, rsID, Clin Gen Allele Registry ID, or ClinVar variation ID"),  # noqa: E501
+    reference_genome: Optional[ReferenceGenome] = Query(
+        None, description="Reference genome for `variant_id`. Must be either `GRCh38` or `GRCh37`")  # noqa: E501
 ) -> Response:
     """Return gnomAD population frequency data for variant.
 
     :param str variant_id: variation id
     :return: Return gnomAD population frequency data for variant.
     """
-    return gnomad.frequency_data(html.unescape(variant_id))
+    return gnomad.frequency_data(unquote(variant_id), reference_genome)

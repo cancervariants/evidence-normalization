@@ -1,5 +1,5 @@
 """Dev CLI"""
-import click
+import asyncclick as click
 
 from evidence.dev.etl.cancer_hotspots import CancerHotspotsETL, \
     CancerHotspotsETLException
@@ -25,8 +25,8 @@ from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
     default=False,
     help="Transforms all source data, currently cBioPortal and Cancer Hotspots"
 )
-def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
-        transform_all: bool) -> None:
+async def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
+              transform_all: bool) -> None:
     """Execute CLI methods
 
     :param bool transform_cancer_hotspots: Determines whether or not to transform
@@ -37,12 +37,12 @@ def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
     """
     if transform_all:
         transform_cbioportal_data()
-        transform_cancer_hotspots_data()
+        await transform_cancer_hotspots_data()
     else:
         if transform_cbioportal:
             transform_cbioportal_data()
         if transform_cancer_hotspots:
-            transform_cancer_hotspots_data()
+            await transform_cancer_hotspots_data()
 
 
 def transform_cbioportal_data() -> None:
@@ -54,14 +54,14 @@ def transform_cbioportal_data() -> None:
         click.echo(e)
 
 
-def transform_cancer_hotspots_data() -> None:
+async def transform_cancer_hotspots_data() -> None:
     """Transform Cancer Hotspots data"""
     c = CancerHotspotsETL()
     try:
-        c.add_vrs_identifier_to_data()
+        await c.add_vrs_identifier_to_data()
     except CancerHotspotsETLException as e:
         click.echo(e)
 
 
 if __name__ == "__main__":
-    cli()
+    cli(_anyio_backend="asyncio")

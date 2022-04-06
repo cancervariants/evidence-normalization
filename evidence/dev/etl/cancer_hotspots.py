@@ -68,7 +68,7 @@ class CancerHotspotsETL(CancerHotspots):
                 logger.error(f"Unable to download Cancer Hotspots data. "
                              f"Received status code: {r.status_code}")
 
-    def add_vrs_identifier_to_data(self) -> None:
+    async def add_vrs_identifier_to_data(self) -> None:
         """Normalize variations in cancer hotspots SNV sheet and adds `vrs_identifier`
         column to dataframe. Run manually each time variation-normalizer
         or Cancer Hotspots releases a new version.
@@ -86,9 +86,9 @@ class CancerHotspotsETL(CancerHotspots):
 
         logger.info("Normalizing Cancer Hotspots data...")
         start = timer()
-        self.get_transformed_data(
+        await self.get_transformed_data(
             snv_hotspots, variation_normalizer, self.new_snv_sheet_name)
-        self.get_transformed_data(
+        await self.get_transformed_data(
             indel_hotspots, variation_normalizer, self.new_indel_sheet_name)
         end = timer()
         logger.info(f"transformed Cancer Hotspots data in {(end-start):.5f} s")
@@ -100,8 +100,9 @@ class CancerHotspotsETL(CancerHotspots):
         indel_hotspots.to_csv(indel_transformed_data_path)
         logger.info("Successfully transformed Cancer Hotspots data.")
 
-    def get_transformed_data(self, df: pd.DataFrame,
-                             variation_normalizer: QueryHandler, df_name: str) -> None:
+    async def get_transformed_data(
+        self, df: pd.DataFrame, variation_normalizer: QueryHandler, df_name: str
+    ) -> None:
         """Normalize variant and add vrs_identifier column to df
 
         :param pd.DataFrame df: Dataframe to transform
@@ -116,7 +117,7 @@ class CancerHotspotsETL(CancerHotspots):
             else:
                 variation = f"{row['Hugo_Symbol']} {row['Variant_Amino_Acid'].split(':')[0]}"  # noqa: E501
             try:
-                norm_vd = variation_normalizer.normalize(variation)
+                norm_vd = await variation_normalizer.normalize(variation)
             except Exception as e:
                 logger.warning(f"variation-normalizer unable to normalize {variation}: {e}")  # noqa: E501
             else:
