@@ -31,7 +31,7 @@ def check_source_meta(response):
 def test_query_snv_hotspots(cancer_hotspots, braf_v600e):
     """Test that query_snv_hotspots method works correctly."""
     resp = cancer_hotspots.query_snv_hotspots(
-        vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
+        vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
     )
     assert resp == braf_v600e
 
@@ -55,7 +55,7 @@ def test_query_indel_hotspots(cancer_hotspots):
 
     # BRAF N486_A489delinsK
     resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.elb_blzX0l5YHbSEHHdFYIoJmAEbJ2yv")
+        "ga4gh:VA.VQIv8F8AZHBjdNYPB_Y0LzJi3J-BGBEG")
     assert resp == {
         "codon": "486-494",
         "mutation": "N486_A489delinsK",
@@ -66,7 +66,7 @@ def test_query_indel_hotspots(cancer_hotspots):
 
     # BRAF N486_P490del
     resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.VNzgFrkk2GFvUFAm7gtB6BxdN5H8uuKC")
+        "ga4gh:VA.1moxgQ3AxfqimQilhDn94nHU24vmOpU8")
     assert resp == {
         "codon": "486-494",
         "mutation": "N486_P490del",
@@ -101,7 +101,7 @@ def test_query_indel_hotspots(cancer_hotspots):
 def test_hotspot_data(cancer_hotspots, braf_v600e):
     """Test that hotspot_data method works correctly."""
     resp = cancer_hotspots.mutation_hotspots(
-        so_id="SO:0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
+        so_id="SO:0001606", vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
     ).dict(by_alias=True)
     assert resp["_id"] == "normalize.evidence:f14dcca46895ceda70ea901452dfe1d4"
     assert resp["data"] == braf_v600e
@@ -117,7 +117,7 @@ def test_hotspot_data(cancer_hotspots, braf_v600e):
 
     # invalid so_id
     resp = cancer_hotspots.mutation_hotspots(
-        so_id="SO0001606", vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
+        so_id="SO0001606", vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
     ).dict(by_alias=True)
     assert resp["_id"] is None
     assert resp["data"] == dict()
