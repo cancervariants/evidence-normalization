@@ -20,7 +20,7 @@ class DataSource:
         """
         if resp.data:
             blob = json.dumps(
-                resp.dict(), sort_keys=True, separators=(",", ":"), indent=None
+                resp.model_dump(), sort_keys=True, separators=(",", ":"), indent=None
             ).encode("utf-8")
             digest = hashlib.md5(blob)
             resp.id = f"normalize.evidence:{digest.hexdigest()}"
