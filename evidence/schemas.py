@@ -2,17 +2,11 @@
 from enum import Enum
 from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, Extra
-from pydantic.types import StrictStr
+from pydantic import BaseModel, Field, StrictStr, ConfigDict
 
 
-class Base(BaseModel):
+class Base(BaseModel, extra="forbid"):
     """Base class for pydantic models"""
-
-    class Config:
-        """Class configs"""
-
-        extra = Extra.forbid
 
 
 class Sources(str, Enum):
@@ -32,10 +26,7 @@ class SourceMeta(Base):
 class Response(Base):
     """Response model"""
 
-    class Config(Base.Config):
-        """Class configs"""
-
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
     id: Optional[str] = Field(default=None, alias="_id")
     data: Dict = dict()
