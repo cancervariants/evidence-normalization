@@ -1,8 +1,7 @@
 """Dev CLI"""
 import asyncclick as click
 
-from evidence.dev.etl.cancer_hotspots import CancerHotspotsETL, \
-    CancerHotspotsETLException
+from evidence.dev.etl.cancer_hotspots import CancerHotspotsETL, CancerHotspotsETLError
 from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
 
 
@@ -59,7 +58,7 @@ async def transform_cancer_hotspots_data() -> None:
     c = CancerHotspotsETL()
     try:
         await c.add_vrs_identifier_to_data()
-    except CancerHotspotsETLException as e:
+    except CancerHotspotsETLError as e:
         click.echo(e)
 
 

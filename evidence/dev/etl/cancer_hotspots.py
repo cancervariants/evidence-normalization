@@ -1,4 +1,5 @@
 """Module for ETL cancer hotspots data"""
+import json
 import logging
 from timeit import default_timer as timer
 from datetime import datetime
@@ -13,14 +14,11 @@ from evidence import DATA_DIR_PATH
 from evidence.data_sources import CancerHotspots
 
 
-class CancerHotspotsETLException(Exception):
+class CancerHotspotsETLError(Exception):
     """Exceptions for Cancer Hotspots ETL"""
 
-    pass
 
-
-logger = logging.getLogger("evidence.etl.cancer_hotspots")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class CancerHotspotsETL(CancerHotspots):
@@ -29,33 +27,25 @@ class CancerHotspotsETL(CancerHotspots):
     def __init__(
         self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
         src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
-        snv_transformed_data_path: Optional[Path] = None,
-        indel_transformed_data_path: Optional[Path] = None,
+        transformed_data_path: Optional[Path] = DATA_DIR_PATH / "cancer_hotspots",
         ignore_transformed_data: bool = True
     ) -> None:
         """Initialize the CancerHotspotsETL class
 
-        :param str data_url: URL to data file
-        :param Path src_dir_path: Path to cancer hotspots data directory
-        :param Optional[Path] snv_transformed_data_path: Path to transformed cancer
-            hotspots SNV file
-        :param Optional[Path] indel_transformed_data_path: Path to transformed cancer
-            hotspots INDEL file
-        :param bool ignore_transformed_data: `True` if only bare init is needed. This
-            is intended for developers when using the CLI to normalize cancer hotspots
-            data. Ignores paths set in `snv_transformed_data_path` and
-            `indel_transformed_data_path`. `False` will load transformed data from s3
+        :param data_url: URL to data file
+        :param src_dir_path: Path to cancer hotspots data directory
+        :param transformed_data_path: Path to transformed cancer hotspots file
+        :param ignore_transformed_data: `True` if only bare init is needed. This is
+            intended for developers when using the CLI to transform cancer hotspots
+            data. Ignores path set in `_transformed_data_path`. `False` will load
+            transformed data from s3
         """
         super().__init__(
-            data_url, src_dir_path, snv_transformed_data_path,
-            indel_transformed_data_path, ignore_transformed_data
+            data_url, src_dir_path, transformed_data_path, ignore_transformed_data
         )
         fn = self.data_url.split("/")[-1]
         self.data_path = self.src_dir_path / fn
-        self.og_snv_sheet_name = "SNV-hotspots"
-        self.og_indel_sheet_name = "INDEL-hotspots"
-        self.new_snv_sheet_name = "snv_hotspots"
-        self.new_indel_sheet_name = "indel_hotspots"
+        self.transformed_data = {}  # vrs_id: hotspot data
 
     def download_data(self) -> None:
         """Download Cancer Hotspots data."""
@@ -69,63 +59,88 @@ class CancerHotspotsETL(CancerHotspots):
                              f"Received status code: {r.status_code}")
 
     async def add_vrs_identifier_to_data(self) -> None:
-        """Normalize variations in cancer hotspots SNV sheet and adds `vrs_identifier`
-        column to dataframe. Run manually each time variation-normalizer
-        or Cancer Hotspots releases a new version.
+        """Normalize variations in cancer hotspots and updates `transformed_data`
+
+        Run manually each time variation-normalizer or Cancer Hotspots releases a new
+        version.
         """
         self.download_data()
         if not self.data_path.exists():
-            raise CancerHotspotsETLException("Downloading Cancer Hotspots data"
-                                             " was unsuccessful")
+            raise CancerHotspotsETLError(
+                "Downloading Cancer Hotspots data was unsuccessful"
+            )
 
-        snv_hotspots = pd.read_excel(self.data_path,
-                                     sheet_name=self.og_snv_sheet_name)
-        indel_hotspots = pd.read_excel(self.data_path,
-                                       sheet_name=self.og_indel_sheet_name)
+        snv_hotspots = pd.read_excel(self.data_path, sheet_name="SNV-hotspots")
+        indel_hotspots = pd.read_excel(self.data_path, sheet_name="INDEL-hotspots")
         variation_normalizer = QueryHandler()
 
         logger.info("Normalizing Cancer Hotspots data...")
         start = timer()
         await self.get_transformed_data(
-            snv_hotspots, variation_normalizer, self.new_snv_sheet_name)
+            snv_hotspots, variation_normalizer, is_snv=True)
         await self.get_transformed_data(
-            indel_hotspots, variation_normalizer, self.new_indel_sheet_name)
+            indel_hotspots, variation_normalizer, is_snv=False)
         end = timer()
-        logger.info(f"transformed Cancer Hotspots data in {(end-start):.5f} s")
+
+        logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
 
         today = datetime.strftime(datetime.today(), "%Y%m%d")
-        snv_transformed_data_path = self.src_dir_path / f"hotspots_snv_v{self.source_meta.version}_{today}.csv"  # noqa: E501
-        indel_transformed_data_path = self.src_dir_path / f"hotspots_indel_v{self.source_meta.version}_{today}.csv"  # noqa: E501
-        snv_hotspots.to_csv(snv_transformed_data_path)
-        indel_hotspots.to_csv(indel_transformed_data_path)
+        transformed_data_path = self.src_dir_path / f"cancer_hotspots_{today}.json"
+        with transformed_data_path.open("w") as f:
+            json.dump(self.transformed_data, f)
+
         logger.info("Successfully transformed Cancer Hotspots data.")
 
     async def get_transformed_data(
-        self, df: pd.DataFrame, variation_normalizer: QueryHandler, df_name: str
+        self, df: pd.DataFrame, variation_normalizer: QueryHandler, is_snv: bool
     ) -> None:
-        """Normalize variant and add vrs_identifier column to df
+        """Normalize variant and updates `transformed_data`
 
-        :param pd.DataFrame df: Dataframe to transform
-        :param QueryHandler variation_normalizer: Variation Normalizer handler
-        :param str df_name: Name of df.
-            Must be either `snv_hotspots` or `indel_hotspots`
+        :param df: Dataframe to transform
+        :param variation_normalizer: Variation Normalizer handler
+        :param is_snv: `True` if SNV data, else INDEL
         """
-        df["vrs_identifier"] = None
-        for i, row in df.iterrows():
-            if df_name == self.new_snv_sheet_name:
-                variation = f"{row['Hugo_Symbol']} {row['ref']}{row['Amino_Acid_Position']}{row['Variant_Amino_Acid'].split(':')[0]}"  # noqa: E501
+        for _, row in df.iterrows():
+            hugo_symbol = row["Hugo_Symbol"]
+            alt = row["Variant_Amino_Acid"]
+            pos = row["Amino_Acid_Position"]
+
+            if is_snv:
+                ref = row["ref"]
+                variation = f"{hugo_symbol} {ref}{pos}{alt.split(':')[0]}"
             else:
-                variation = f"{row['Hugo_Symbol']} {row['Variant_Amino_Acid'].split(':')[0]}"  # noqa: E501
+                ref = None
+                variation = f"{hugo_symbol} {alt.split(':')[0]}"
+
             try:
-                norm_vd = await variation_normalizer.normalize(variation)
+                variation_norm_resp = await variation_normalizer.normalize_handler.normalize(variation)  # noqa: E501
             except Exception as e:
-                logger.warning(f"variation-normalizer unable to normalize {variation}: {e}")  # noqa: E501
+                logger.error("variation-normalizer unable to normalize %s: %s", variation, str(e))  # noqa: E501
             else:
-                if norm_vd:
-                    norm_vd = norm_vd.dict()
-                    if norm_vd["variation"]["type"] != "Text":
-                        df.at[i, "vrs_identifier"] = norm_vd["variation"]["id"]
+                if variation_norm_resp and variation_norm_resp.variation:
+                    vrs_id = variation_norm_resp.variation.id
+                    if vrs_id in self.transformed_data:
+                        logger.debug(
+                            "duplicate vrs_id (%s) for variation (%s)",
+                            vrs_id,
+                            variation
+                        )
+
+                    mutation, observations = alt.split(":")
+
+                    if is_snv:
+                        codon = f"{ref}{pos}"
+                        mutation = f"{codon}{mutation}"
                     else:
-                        logger.warning(f"variation-normalizer unable to normalize: {variation}")  # noqa: E501
+                        codon = pos
+
+                    self.transformed_data[vrs_id] = {
+                        "variation": variation,
+                        "codon": codon,
+                        "mutation": mutation,
+                        "q_value": float(row["qvalue"]),
+                        "observations": int(observations),
+                        "total_observations": int(row["Mutation_Count"])
+                    }
                 else:
-                    logger.warning(f"variation-normalizer unable to normalize: {variation}")  # noqa: E501
+                    logger.warning("variation-normalizer unable to normalize: %s", variation)  # noqa: E501
