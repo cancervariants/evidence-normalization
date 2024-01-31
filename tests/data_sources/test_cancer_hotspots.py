@@ -14,6 +14,7 @@ def cancer_hotspots():
 def braf_v600e():
     """Create test fixture for braf v600e"""
     return {
+        "variation": "BRAF V600E",
         "codon": "V600",
         "mutation": "V600E",
         "q_value": 0.0,
@@ -28,35 +29,12 @@ def check_source_meta(response):
     assert response["source_meta_"]["version"] == "2"
 
 
-def test_query_snv_hotspots(cancer_hotspots, braf_v600e):
-    """Test that query_snv_hotspots method works correctly."""
-    resp = cancer_hotspots.query_snv_hotspots(
-        vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
-    )
-    assert resp == braf_v600e
-
-    resp = cancer_hotspots.query_snv_hotspots(
-        vrs_variation_id="ga4gh:VA.8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCEssdfs"
-    )
-    assert resp is None
-
-
-def test_query_indel_hotspots(cancer_hotspots):
-    """Test that query_indel_hotspots method works correctly."""
-    # TODO: BRAF T599dup not supported yet in variation-normalizer
-    # resp = cancer_hotspots.query_indel_hotspots()
-    # assert resp == {
-    #     "codon": "592-604",
-    #     "mutation": "T599dup",
-    #     "q_value": 6.86065772143357e-11,
-    #     "observations": 3,
-    #     "total_observations": 8
-    # }
-
-    # BRAF N486_A489delinsK
-    resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.VQIv8F8AZHBjdNYPB_Y0LzJi3J-BGBEG")
-    assert resp == {
+def test_mutation_hotspots(cancer_hotspots, braf_v600e):
+    """Test that mutation_hotspots method works correctly."""
+    resp = cancer_hotspots.mutation_hotspots(
+        "ga4gh:VA.mo-SCo1oC_8rUioVymmrlDjwewWzJUdt")
+    assert resp.data == {
+        "variation": "BRAF N486_A489delinsK",
         "codon": "486-494",
         "mutation": "N486_A489delinsK",
         "q_value": 3.9500653726776106e-09,
@@ -64,10 +42,10 @@ def test_query_indel_hotspots(cancer_hotspots):
         "total_observations": 7
     }
 
-    # BRAF N486_P490del
-    resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.1moxgQ3AxfqimQilhDn94nHU24vmOpU8")
-    assert resp == {
+    resp = cancer_hotspots.mutation_hotspots(
+        "ga4gh:VA.qiBmeiaWQpVa-NQbBk-tRb29arFXHlII")
+    assert resp.data == {
+        "variation": "BRAF N486_P490del",
         "codon": "486-494",
         "mutation": "N486_P490del",
         "q_value": 3.9500653726776106e-09,
@@ -75,10 +53,10 @@ def test_query_indel_hotspots(cancer_hotspots):
         "total_observations": 7
     }
 
-    # TP53 I255del
-    resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.jH5IPQRfICPyoSpeRT2C8Zu36gEnUUis")
-    assert resp == {
+    resp = cancer_hotspots.mutation_hotspots(
+        "ga4gh:VA.4Wr6-Pw1TiTDxvYTSthJHz0sl52wb7Hq")
+    assert resp.data == {
+        "variation": "TP53 I255del",
         "codon": "229-292",
         "mutation": "I255del",
         "q_value": 1.46521691051924e-64,
@@ -86,10 +64,10 @@ def test_query_indel_hotspots(cancer_hotspots):
         "total_observations": 76
     }
 
-    # CEBPA T310_Q311insKQNP
-    resp = cancer_hotspots.query_indel_hotspots(
-        "ga4gh:VA.pDj9pPKvaZ-BjhdtZ2wi717V4ZAuf-OD")
-    assert resp == {
+    resp = cancer_hotspots.mutation_hotspots(
+        "ga4gh:VA.0rVaYwX7S_-NenW_WQ5e7JoHQFkscWUS")
+    assert resp.data == {
+        "variation": "CEBPA T310_Q311insKQNP",
         "codon": "307-311",
         "mutation": "T310_Q311insKQNP",
         "q_value": 0.0050613902181432,
@@ -97,28 +75,17 @@ def test_query_indel_hotspots(cancer_hotspots):
         "total_observations": 4
     }
 
-
-def test_hotspot_data(cancer_hotspots, braf_v600e):
-    """Test that hotspot_data method works correctly."""
     resp = cancer_hotspots.mutation_hotspots(
-        so_id="SO:0001606", vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
+        vrs_variation_id="ga4gh:VA.4XBXAxSAk-WyAu5H0S1-plrk_SCTW1PO"
     ).dict(by_alias=True)
-    assert resp["_id"] == "normalize.evidence:f14dcca46895ceda70ea901452dfe1d4"
+    assert resp["_id"] == "normalize.evidence:92f3db383a79d855323a71d65d860ec3"
     assert resp["data"] == braf_v600e
     check_source_meta(resp)
 
     # invalid vrs_variation_id
     resp = cancer_hotspots.mutation_hotspots(
-        so_id="SO:0001606", vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
+        vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
     ).dict(by_alias=True)
     assert resp["_id"] is None
-    assert resp["data"] == dict()
-    check_source_meta(resp)
-
-    # invalid so_id
-    resp = cancer_hotspots.mutation_hotspots(
-        so_id="SO0001606", vrs_variation_id="ga4gh:VA.ZDdoQdURgO2Daj2NxLj4pcDnjiiAsfbO"
-    ).dict(by_alias=True)
-    assert resp["_id"] is None
-    assert resp["data"] == dict()
+    assert resp["data"] == {}
     check_source_meta(resp)

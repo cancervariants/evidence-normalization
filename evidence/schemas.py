@@ -38,7 +38,7 @@ class Response(Base):
 
         allow_population_by_field_name = True
 
-    id: Optional[str] = Field(alias="_id")
+    id: Optional[str] = Field(default=None, alias="_id")
     data: Dict = dict()
     source_meta_: SourceMeta
 
@@ -62,7 +62,6 @@ class ReferenceGenome(str, Enum):
 class SourceDataType(str, Enum):
     """Define constraints for source data type for data file"""
 
-    CANCER_HOTSPOTS_SNV = "snv"
-    CANCER_HOTSPOTS_INDEL = "indel"
+    CANCER_HOTSPOTS = "mutation_hotspots"
     CBIOPORTAL_CASE_LISTS = "case_lists"
     CBIOPORTAL_MUTATIONS = "mutations"
