@@ -18,7 +18,6 @@ class Base(BaseModel):
 class Sources(str, Enum):
     """Define data sources"""
 
-    GNOMAD = "gnomAD"
     CANCER_HOTSPOTS = "Cancer Hotspots"
     CBIOPORTAL = "cBioPortal"
 
@@ -41,22 +40,6 @@ class Response(Base):
     id: Optional[str] = Field(default=None, alias="_id")
     data: Dict = dict()
     source_meta_: SourceMeta
-
-
-class GnomadDataset(str, Enum):
-    """Define datasets used in gnomad"""
-
-    # MUST put in descending dataset
-    GNOMAD_R3 = "gnomad_r3"
-    GNOMAD_R2_1 = "gnomad_r2_1"
-
-
-class ReferenceGenome(str, Enum):
-    """Define reference genome assemblies"""
-
-    # MUST put in descending assembly
-    GRCH38 = "GRCh38"
-    GRCH37 = "GRCh37"
 
 
 class SourceDataType(str, Enum):
