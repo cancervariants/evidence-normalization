@@ -14,14 +14,11 @@ from evidence import DATA_DIR_PATH
 from evidence.data_sources import CancerHotspots
 
 
-class CancerHotspotsETLException(Exception):
+class CancerHotspotsETLError(Exception):
     """Exceptions for Cancer Hotspots ETL"""
 
-    pass
 
-
-logger = logging.getLogger("evidence.etl.cancer_hotspots")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class CancerHotspotsETL(CancerHotspots):
@@ -69,8 +66,9 @@ class CancerHotspotsETL(CancerHotspots):
         """
         self.download_data()
         if not self.data_path.exists():
-            raise CancerHotspotsETLException("Downloading Cancer Hotspots data"
-                                             " was unsuccessful")
+            raise CancerHotspotsETLError(
+                "Downloading Cancer Hotspots data was unsuccessful"
+            )
 
         snv_hotspots = pd.read_excel(self.data_path, sheet_name="SNV-hotspots")
         indel_hotspots = pd.read_excel(self.data_path, sheet_name="INDEL-hotspots")
@@ -83,11 +81,12 @@ class CancerHotspotsETL(CancerHotspots):
         await self.get_transformed_data(
             indel_hotspots, variation_normalizer, is_snv=False)
         end = timer()
-        logger.info(f"transformed Cancer Hotspots data in {(end-start):.5f} s")
+
+        logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
 
         today = datetime.strftime(datetime.today(), "%Y%m%d")
         transformed_data_path = self.src_dir_path / f"cancer_hotspots_{today}.json"
-        with open(transformed_data_path, "w") as f:
+        with transformed_data_path.open("w") as f:
             json.dump(self.transformed_data, f)
 
         logger.info("Successfully transformed Cancer Hotspots data.")
@@ -116,13 +115,15 @@ class CancerHotspotsETL(CancerHotspots):
             try:
                 variation_norm_resp = await variation_normalizer.normalize_handler.normalize(variation)  # noqa: E501
             except Exception as e:
-                logger.error(f"variation-normalizer unable to normalize {variation}: {e}")  # noqa: E501
+                logger.error("variation-normalizer unable to normalize %s: %s", variation, str(e))  # noqa: E501
             else:
                 if variation_norm_resp and variation_norm_resp.variation:
                     vrs_id = variation_norm_resp.variation.id
                     if vrs_id in self.transformed_data:
                         logger.debug(
-                            f"duplicate vrs_id ({vrs_id}) for variation ({variation})"
+                            "duplicate vrs_id (%s) for variation (%s)",
+                            vrs_id,
+                            variation
                         )
 
                     mutation, observations = alt.split(":")
@@ -142,4 +143,4 @@ class CancerHotspotsETL(CancerHotspots):
                         "total_observations": int(row["Mutation_Count"])
                     }
                 else:
-                    logger.warning(f"variation-normalizer unable to normalize: {variation}")  # noqa: E501
+                    logger.warning("variation-normalizer unable to normalize: %s", variation)  # noqa: E501

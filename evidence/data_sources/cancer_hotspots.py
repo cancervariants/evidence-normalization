@@ -43,7 +43,7 @@ class CancerHotspots(DownloadableDataSource):
             transformed_data_path, SourceDataType.CANCER_HOTSPOTS
         )
         if transformed_data_path:
-            with open(transformed_data_path, "r") as f:
+            with transformed_data_path.open("r") as f:
                 self.transformed_data = json.load(f)
         else:
             self.transformed_data = {}
