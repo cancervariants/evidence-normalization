@@ -77,7 +77,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
 
     resp = cancer_hotspots.mutation_hotspots(
         vrs_variation_id="ga4gh:VA.4XBXAxSAk-WyAu5H0S1-plrk_SCTW1PO"
-    ).dict(by_alias=True)
+    ).model_dump(by_alias=True)
     assert resp["_id"] == "normalize.evidence:92f3db383a79d855323a71d65d860ec3"
     assert resp["data"] == braf_v600e
     check_source_meta(resp)
@@ -85,7 +85,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     # invalid vrs_variation_id
     resp = cancer_hotspots.mutation_hotspots(
         vrs_variation_id="ga4ghVA8JkgnqIgYqufNl-OV_hpRG_aWF9UFQCE"
-    ).dict(by_alias=True)
+    ).model_dump(by_alias=True)
     assert resp["_id"] is None
     assert resp["data"] == {}
     check_source_meta(resp)
