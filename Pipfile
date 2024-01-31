@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 pydantic = "==2.*"
 requests = "*"
-fastapi = "*"
 boto3 = "*"
 
 [dev-packages]
