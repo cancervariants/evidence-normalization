@@ -1,15 +1,14 @@
 """Main application for FastAPI."""
-from typing import Dict, Optional
+from typing import Dict
 from urllib.parse import unquote
 
 from fastapi import FastAPI, Query
 from fastapi.openapi.utils import get_openapi
 
-from evidence.data_sources import CancerHotspots, CBioPortal, GnomAD
+from evidence.data_sources import CancerHotspots, CBioPortal
 from evidence.version import __version__
-from evidence.schemas import ReferenceGenome, Response
+from evidence.schemas import Response
 
-gnomad = GnomAD()
 cbioportal = CBioPortal()
 cancer_hotspots = CancerHotspots()
 app = FastAPI(docs_url="/evidence", openapi_url="/evidence/openapi.json",
@@ -73,73 +72,3 @@ def get_cancer_types_summary(
     :return: Return cancer types with `hgnc_symbol` mutations
     """
     return cbioportal.cancer_types_summary(hgnc_symbol)
-
-
-@app.get("/evidence/gnomad/liftover/38_to_37",
-         summary="Liftover gnomad variant id from GRCh38 to GRCh37",
-         response_description=RESPONSE_DESCRIPTION,
-         description="Return GRCh37 gnomad variant id",
-         response_model=Response)
-def gnomad_38_to_37(
-    gnomad_variant_id: str = Query(..., decsription="gnomAD variant ID on 38 assembly")
-) -> Response:
-    """Given 38 gnomad variant id, liftover to 37
-
-    :param str gnomad_variant_id: gnomAD variant ID on 38 assembly
-    :return: gnomad 37 assembly data
-    """
-    return gnomad.liftover_38_to_37(gnomad_variant_id)
-
-
-@app.get("/evidence/gnomad/liftover/37_to_38",
-         summary="Liftover gnomad variant id from GRCh37 to GRCh38",
-         response_description=RESPONSE_DESCRIPTION,
-         description="Return GRCh38 gnomad variant id",
-         response_model=Response)
-def gnomad_37_to_38(
-    gnomad_variant_id: str = Query(..., decsription="gnomAD variant ID on 37 assembly")
-) -> Response:
-    """Given 37 gnomad variant id, liftover to 38
-
-    :param str gnomad_variant_id: gnomAD variant ID on 37 assembly
-    :return: gnomad 38 assembly data
-    """
-    return gnomad.liftover_37_to_38(gnomad_variant_id)
-
-
-@app.get("/evidence/gnomad/clinvar_variation_id",
-         summary="Given gnomad variant id, return clinvar variation id",
-         response_description=RESPONSE_DESCRIPTION,
-         description="Return clinvar variation id",
-         response_model=Response)
-def get_clinvar_variation_id(
-    gnomad_variant_id: str = Query(..., description="gnomAD variant ID"),
-    reference_genome: Optional[str] = Query(None, description="GRCh37 or GRCh38")
-) -> Response:
-    """Given gnomad variant id, return clinvar variant id
-
-    :param str gnomad_variant_id: gnomad variant ID
-    :param Optional[str] reference_genome: GRCh37 or GRCh38
-    :return: Clinvar variant ID
-    """
-    return gnomad.clinvar_variation_id(unquote(gnomad_variant_id), reference_genome)
-
-
-@app.get("/evidence/gnomad/frequency_data",
-         summary="Given variant id, return gnomAD Frequency.",
-         response_description=RESPONSE_DESCRIPTION,
-         description="Return gnomAD population frequency data for variant.",
-         response_model=Response)
-def get_gnomad_frequency(
-    variant_id: str = Query(
-        None,
-        description="gnomAD variant ID, rsID, Clin Gen Allele Registry ID, or ClinVar variation ID"),  # noqa: E501
-    reference_genome: Optional[ReferenceGenome] = Query(
-        None, description="Reference genome for `variant_id`. Must be either `GRCh38` or `GRCh37`")  # noqa: E501
-) -> Response:
-    """Return gnomAD population frequency data for variant.
-
-    :param str variant_id: variation id
-    :return: Return gnomAD population frequency data for variant.
-    """
-    return gnomad.frequency_data(unquote(variant_id), reference_genome)
