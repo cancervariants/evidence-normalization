@@ -13,8 +13,7 @@ from evidence.data_sources import CBioPortal
 from evidence.dev.etl import ETL_DATA_DIR_PATH
 
 warnings.filterwarnings("ignore")
-logger = logging.getLogger("evidence.etl.cbioportal")
-logger.setLevel(logging.DEBUG)
+_logger = logging.getLogger(__name__)
 
 
 class CBioPortalETLException(Exception):
@@ -62,7 +61,7 @@ class CBioPortalETL(CBioPortal):
             file.extractall(path=self.src_dir_etl_path)
             self.msk_impact_2017_dir = self.src_dir_etl_path / "msk_impact_2017"
         else:
-            logger.error(f"Unable to download cBioPortal data. "
+            _logger.error(f"Unable to download cBioPortal data. "
                          f"Received status code: {response.status_code}")
 
     def transform_data(self) -> None:
@@ -80,7 +79,7 @@ class CBioPortalETL(CBioPortal):
         mutations_data_path = self.src_dir_path / "msk_impact_2017_mutations.csv"
         case_lists_df.to_csv(case_lists_data_path)
         mutations_df.to_csv(mutations_data_path)
-        logger.info("Successfully transformed cBioPortal data.")
+        _logger.info("Successfully transformed cBioPortal data.")
 
     def create_case_lists_df(self) -> pd.DataFrame:
         """Create case lists data frame
