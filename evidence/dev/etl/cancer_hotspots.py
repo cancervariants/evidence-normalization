@@ -18,7 +18,7 @@ class CancerHotspotsETLError(Exception):
     """Exceptions for Cancer Hotspots ETL"""
 
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class CancerHotspotsETL(CancerHotspots):
@@ -55,7 +55,7 @@ class CancerHotspotsETL(CancerHotspots):
                 with open(self.data_path, "wb") as f:
                     f.write(r.content)
             else:
-                _logger.error(f"Unable to download Cancer Hotspots data. "
+                logger.error(f"Unable to download Cancer Hotspots data. "
                              f"Received status code: {r.status_code}")
 
     async def add_vrs_identifier_to_data(self) -> None:
@@ -74,7 +74,7 @@ class CancerHotspotsETL(CancerHotspots):
         indel_hotspots = pd.read_excel(self.data_path, sheet_name="INDEL-hotspots")
         variation_normalizer = QueryHandler()
 
-        _logger.info("Normalizing Cancer Hotspots data...")
+        logger.info("Normalizing Cancer Hotspots data...")
         start = timer()
         await self.get_transformed_data(
             snv_hotspots, variation_normalizer, is_snv=True)
@@ -82,14 +82,14 @@ class CancerHotspotsETL(CancerHotspots):
             indel_hotspots, variation_normalizer, is_snv=False)
         end = timer()
 
-        _logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
+        logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
 
         today = datetime.strftime(datetime.today(), "%Y%m%d")
         transformed_data_path = self.src_dir_path / f"cancer_hotspots_{today}.json"
         with transformed_data_path.open("w") as f:
             json.dump(self.transformed_data, f)
 
-        _logger.info("Successfully transformed Cancer Hotspots data.")
+        logger.info("Successfully transformed Cancer Hotspots data.")
 
     async def get_transformed_data(
         self, df: pd.DataFrame, variation_normalizer: QueryHandler, is_snv: bool
@@ -115,12 +115,12 @@ class CancerHotspotsETL(CancerHotspots):
             try:
                 variation_norm_resp = await variation_normalizer.normalize_handler.normalize(variation)  # noqa: E501
             except Exception as e:
-                _logger.error("variation-normalizer unable to normalize %s: %s", variation, str(e))  # noqa: E501
+                logger.error("variation-normalizer unable to normalize %s: %s", variation, str(e))  # noqa: E501
             else:
                 if variation_norm_resp and variation_norm_resp.variation:
                     vrs_id = variation_norm_resp.variation.id
                     if vrs_id in self.transformed_data:
-                        _logger.debug(
+                        logger.debug(
                             "duplicate vrs_id (%s) for variation (%s)",
                             vrs_id,
                             variation
@@ -143,4 +143,4 @@ class CancerHotspotsETL(CancerHotspots):
                         "total_observations": int(row["Mutation_Count"])
                     }
                 else:
-                    _logger.warning("variation-normalizer unable to normalize: %s", variation)  # noqa: E501
+                    logger.warning("variation-normalizer unable to normalize: %s", variation)  # noqa: E501
