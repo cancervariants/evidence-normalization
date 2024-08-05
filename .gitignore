@@ -133,3 +133,5 @@ pyproject.toml
 # data
 evidence/data/*
 evidence/dev/etl/data/*
+
+.DS_Store
