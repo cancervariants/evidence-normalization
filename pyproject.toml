@@ -64,7 +64,7 @@ testpaths = ["tests"]
 branch = true
 
 [tool.ruff]
-src = ["evidence"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = [
