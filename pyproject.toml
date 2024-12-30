@@ -33,7 +33,7 @@ etl = [
     "pandas",
     "xlrd"
 ]
-test = [
+tests = [
     "pytest",
     "pytest-cov"
 ]
