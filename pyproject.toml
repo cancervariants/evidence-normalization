@@ -28,12 +28,20 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = [
+etl = [
     "variation-normalizer~= 0.8.0.dev0",
     "asyncclick",
     "openpyxl",
     "pandas",
     "xlrd"
+]
+dev = [
+    "pre-commit>=3.7.1",
+    "flake8",
+    "flake-docstrings",
+    "flake8-quotes",
+    "flake8-annotations",
+    "flake8-import-order"
 ]
 test = [
     "pytest",
