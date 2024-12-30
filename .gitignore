@@ -128,8 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-pyproject.toml
-
 # data
 evidence/data/*
 evidence/dev/etl/data/*
