@@ -1,4 +1,5 @@
 """Module for accessing python client for cBioPortal."""
+import logging
 from typing import Optional
 from pathlib import Path
 import shutil
@@ -7,9 +8,12 @@ import csv
 
 import boto3
 
-from evidence import DATA_DIR_PATH, logger
+from evidence import DATA_DIR_PATH
 from evidence.data_sources.base import DownloadableDataSource
 from evidence.schemas import SourceDataType, SourceMeta, Response, Sources
+
+
+_logger = logging.getLogger(__name__)
 
 
 class CBioPortal(DownloadableDataSource):
@@ -59,7 +63,7 @@ class CBioPortal(DownloadableDataSource):
         """
         is_mutations = src_data_type == SourceDataType.CBIOPORTAL_MUTATIONS
         data_type = "mutations" if is_mutations else "case_lists"
-        logger.info(f"Retrieving transformed {data_type} data from s3 bucket...")
+        _logger.info(f"Retrieving transformed {data_type} data from s3 bucket...")
         s3 = boto3.client("s3")
         zip_fn = "msk_impact_2017_mutations.csv.zip" if is_mutations else "msk_impact_2017_case_lists.csv.zip"  # noqa: E501
         zip_path = self.src_dir_path / zip_fn
@@ -68,7 +72,7 @@ class CBioPortal(DownloadableDataSource):
                                 f"evidence_normalization/cbioportal/{zip_fn}", f)
         shutil.unpack_archive(zip_path, self.src_dir_path)
         remove(zip_path)
-        logger.info(f"Successfully downloaded transformed cBioPortal {data_type} data")
+        _logger.info(f"Successfully downloaded transformed cBioPortal {data_type} data")
         data_path = self.src_dir_path / zip_fn[:-4]
         return data_path
 

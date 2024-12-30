@@ -3,6 +3,7 @@
 Downloads Site: https://www.cancerhotspots.org/#/download
 Data URL: https://www.cancerhotspots.org/files/hotspots_v2.xls
 """
+import logging
 from os import remove
 import shutil
 from pathlib import Path
@@ -12,9 +13,12 @@ import json
 import boto3
 from botocore.config import Config
 
-from evidence import DATA_DIR_PATH, logger
+from evidence import DATA_DIR_PATH
 from evidence.data_sources.base import DownloadableDataSource
 from evidence.schemas import SourceDataType, SourceMeta, Response, Sources
+
+
+_logger = logging.getLogger(__name__)
 
 
 class CancerHotspots(DownloadableDataSource):
@@ -58,7 +62,7 @@ class CancerHotspots(DownloadableDataSource):
         :return: Path to transformed data file
         """
         data_path = None
-        logger.info("Retrieving transformed cancer hotspots data from s3 bucket...")
+        _logger.info("Retrieving transformed cancer hotspots data from s3 bucket...")
         s3 = boto3.resource("s3", config=Config(region_name="us-east-2"))
         prefix = \
             f"evidence_normalization/cancer_hotspots/{src_data_type.value}_"
@@ -75,13 +79,13 @@ class CancerHotspots(DownloadableDataSource):
                     obj.download_fileobj(f)
                 shutil.unpack_archive(zip_path, self.src_dir_path)
                 remove(zip_path)
-                logger.info("Successfully downloaded transformed Cancer Hotspots data")
+                _logger.info("Successfully downloaded transformed Cancer Hotspots data")
             else:
-                logger.info("Latest transformed Cancer Hotspots data already exists")
+                _logger.info("Latest transformed Cancer Hotspots data already exists")
 
             data_path = transformed_data_path
         else:
-            logger.warning(
+            _logger.warning(
                 "Could not find transformed Cancer Hotspots data in vicc-normalizers "
                 "s3 bucket"
             )
