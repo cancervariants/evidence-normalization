@@ -1,11 +1,14 @@
 """Module for the base data source class"""
 import json
 import hashlib
+import logging
 from pathlib import Path
 from typing import Optional
 
-from evidence import logger
 from evidence.schemas import Response, SourceDataType
+
+
+_logger = logging.getLogger(__name__)
 
 
 class DataSource:
@@ -69,8 +72,7 @@ class DownloadableDataSource(DataSource):
                 if transformed_data_path.exists():
                     data_path = transformed_data_path
                 else:
-                    logger.error(f"The supplied path at {transformed_data_path} "
-                                 f"does not exist.")
+                    _logger.error("The supplied path at %s does not exist.", transformed_data_path)
             else:
                 data_path = self.download_s3_data(src_data_type)
         return data_path
