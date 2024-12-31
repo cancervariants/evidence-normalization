@@ -21,7 +21,7 @@ python3 -m pip install evidence-normalizer[etl]
 Clone the repo and create a virtual environment:
 
 ```shell
-git clone <https://github.com/cancervariants/evidence-normalization>
+git clone https://github.com/cancervariants/evidence-normalization
 cd evidence-normalization
 python3 -m virtualenv venv
 source venv/bin/activate
