@@ -28,14 +28,14 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = [
+etl = [
     "variation-normalizer~= 0.8.0.dev0",
     "asyncclick",
     "openpyxl",
     "pandas",
     "xlrd"
 ]
-test = [
+tests = [
     "pytest",
     "pytest-cov"
 ]
