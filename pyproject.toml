@@ -39,7 +39,7 @@ dev = [
     "pre-commit>=3.7.1",
     "ruff==0.5.0"
 ]
-test = [
+tests = [
     "pytest",
     "pytest-cov"
 ]
