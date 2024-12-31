@@ -86,7 +86,9 @@ class CancerHotspotsETL(CancerHotspots):
 
         _logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
 
-        today = datetime.strftime(datetime.datetime.now(tz=datetime.UTC), "%Y%m%d")
+        today = datetime.datetime.strftime(
+            datetime.datetime.now(tz=datetime.UTC), "%Y%m%d"
+        )
         transformed_data_path = self.src_dir_path / f"cancer_hotspots_{today}.json"
         with transformed_data_path.open("w") as f:
             json.dump(self.transformed_data, f)
