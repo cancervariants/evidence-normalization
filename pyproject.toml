@@ -35,6 +35,14 @@ etl = [
     "pandas",
     "xlrd"
 ]
+dev = [
+    "pre-commit>=3.7.1",
+    "flake8",
+    "flake-docstrings",
+    "flake8-quotes",
+    "flake8-annotations",
+    "flake8-import-order"
+]
 tests = [
     "pytest",
     "pytest-cov"
