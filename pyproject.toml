@@ -43,7 +43,7 @@ dev = [
     "flake8-annotations",
     "flake8-import-order"
 ]
-test = [
+tests = [
     "pytest",
     "pytest-cov"
 ]
