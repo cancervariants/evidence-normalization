@@ -90,7 +90,7 @@ class CBioPortalETL(CBioPortal):
         frames = []
         for p in pathlist:
             tmp = pd.read_csv(str(p), sep="delimiter", header=None)
-            tmp = tmp[0].str.split(":", 1, expand=True)
+            tmp = tmp[0].str.split(":", n=1, expand=True)
             tmp = tmp.set_index(0).T
             del tmp["cancer_study_identifier"]
             frames.append(tmp)
