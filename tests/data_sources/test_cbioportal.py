@@ -1,6 +1,7 @@
 """Module for testing cbioportal"""
 
 import pytest
+
 from evidence.data_sources import CBioPortal
 
 

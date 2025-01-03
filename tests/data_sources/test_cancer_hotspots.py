@@ -1,6 +1,7 @@
 """Module for testing cancer hotspots"""
 
 import pytest
+
 from evidence.data_sources import CancerHotspots
 
 
