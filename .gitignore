@@ -122,7 +122,7 @@ dmypy.json
 .pyre/
 
 # data
-evidence/data/*
-evidence/dev/etl/data/*
+src/evidence/data/*
+src/evidence/dev/etl/data/*
 
 .DS_Store
