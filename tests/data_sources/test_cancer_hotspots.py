@@ -6,9 +6,10 @@ from evidence.data_sources import CancerHotspots
 
 
 @pytest.fixture(scope="module")
-def cancer_hotspots():
+def cancer_hotspots(evidence_data_dir):
     """Create test fixture for cancer hotspots class"""
-    return CancerHotspots()
+    globbed = (evidence_data_dir / "cancer_hotspots").glob("cancer_hotspots_*.json")
+    return CancerHotspots(transformed_data_path=sorted(globbed)[-1])
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +34,7 @@ def check_source_meta(response):
 def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     """Test that mutation_hotspots method works correctly."""
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.mo-SCo1oC_8rUioVymmrlDjwewWzJUdt"
+        "ga4gh:VA.urVNVupVvzqE57gZFBu6vsAFScIBNojG"
     )
     assert resp.data == {
         "variation": "BRAF N486_A489delinsK",
@@ -45,7 +46,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.qiBmeiaWQpVa-NQbBk-tRb29arFXHlII"
+        "ga4gh:VA.iKBIyhCE-3Cnh5XJpVNZ4t0Ju8Ov8Ine"
     )
     assert resp.data == {
         "variation": "BRAF N486_P490del",
@@ -57,7 +58,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.4Wr6-Pw1TiTDxvYTSthJHz0sl52wb7Hq"
+        "ga4gh:VA.uIzxca0MnfZ1ni3NYNkvNh6Isw-5QXG9"
     )
     assert resp.data == {
         "variation": "TP53 I255del",
@@ -69,7 +70,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.0rVaYwX7S_-NenW_WQ5e7JoHQFkscWUS"
+        "ga4gh:VA.AM5oy_X7xBxJmWyUPJ0ZSLpRaTgu2kHt"
     )
     assert resp.data == {
         "variation": "CEBPA T310_Q311insKQNP",
@@ -81,7 +82,7 @@ def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        vrs_variation_id="ga4gh:VA.4XBXAxSAk-WyAu5H0S1-plrk_SCTW1PO"
+        vrs_variation_id="ga4gh:VA.j4XnsLZcdzDIYa5pvvXM7t1wn9OITr0L"
     ).model_dump(by_alias=True)
     assert resp["_id"] == "normalize.evidence:92f3db383a79d855323a71d65d860ec3"
     assert resp["data"] == braf_v600e
