@@ -1,12 +1,12 @@
 """Module for ETL cbioportal data"""
+
 import logging
-from pathlib import Path
 import tarfile
 import warnings
-from typing import Optional
+from pathlib import Path
 
-import requests
 import pandas as pd
+import requests
 
 from evidence import DATA_DIR_PATH
 from evidence.data_sources import CBioPortal
@@ -16,10 +16,8 @@ warnings.filterwarnings("ignore")
 _logger = logging.getLogger(__name__)
 
 
-class CBioPortalETLException(Exception):
+class CBioPortalETLError(Exception):
     """Exceptions for CBioPortal ETL"""
-
-    pass
 
 
 class CBioPortalETL(CBioPortal):
@@ -27,11 +25,11 @@ class CBioPortalETL(CBioPortal):
 
     def __init__(
         self,
-        data_url: str = "https://cbioportal-datahub.s3.amazonaws.com/msk_impact_2017.tar.gz",  # noqa: E501
+        data_url: str = "https://cbioportal-datahub.s3.amazonaws.com/msk_impact_2017.tar.gz",
         src_dir_path: Path = DATA_DIR_PATH / "cbioportal",
-        transformed_mutations_data_path: Optional[Path] = None,
-        transformed_case_lists_data_path: Optional[Path] = None,
-        ignore_transformed_data: bool = True
+        transformed_mutations_data_path: Path | None = None,
+        transformed_case_lists_data_path: Path | None = None,
+        ignore_transformed_data: bool = True,
     ) -> None:
         """Initialize cbioportal etl class
 
@@ -47,22 +45,29 @@ class CBioPortalETL(CBioPortal):
             `transformed_case_lists_data_path`. `False` will load transformed
             data from s3
         """
-        super().__init__(data_url, src_dir_path, transformed_mutations_data_path,
-                         transformed_case_lists_data_path, ignore_transformed_data)
+        super().__init__(
+            data_url,
+            src_dir_path,
+            transformed_mutations_data_path,
+            transformed_case_lists_data_path,
+            ignore_transformed_data,
+        )
         self.src_dir_etl_path = ETL_DATA_DIR_PATH / "cbioportal"
         self.src_dir_etl_path.mkdir(exist_ok=True, parents=True)
         self.msk_impact_2017_dir = None
 
     def download_data(self) -> None:
         """Download MSK Impact 2017 data."""
-        response = requests.get(self.data_url, stream=True)
+        response = requests.get(self.data_url, stream=True, timeout=5)
         if response.status_code == 200:
             file = tarfile.open(fileobj=response.raw, mode="r|gz")
-            file.extractall(path=self.src_dir_etl_path)
+            file.extractall(path=self.src_dir_etl_path)  # noqa: S202
             self.msk_impact_2017_dir = self.src_dir_etl_path / "msk_impact_2017"
         else:
-            _logger.error(f"Unable to download cBioPortal data. "
-                         f"Received status code: {response.status_code}")
+            _logger.error(
+                "Unable to download cBioPortal data. Received status code: %i",
+                response.status_code,
+            )
 
     def transform_data(self) -> None:
         """Transform cbioportal data and write to csv files"""
@@ -70,7 +75,8 @@ class CBioPortalETL(CBioPortal):
             self.download_data()
 
         if not self.msk_impact_2017_dir:
-            raise CBioPortalETLException("Downloading cBioPortal data was unsuccessful")
+            err_msg = "Downloading cBioPortal data was unsuccessful"
+            raise CBioPortalETLError(err_msg)
 
         case_lists_df = self.create_case_lists_df()
         mutations_df = self.create_mutations_df()
@@ -101,5 +107,6 @@ class CBioPortalETL(CBioPortal):
 
         :return: Dataframe containing mutation data
         """
-        return pd.read_csv(f"{self.msk_impact_2017_dir}/data_mutations.txt",
-                           sep="\t", skiprows=1)
+        return pd.read_csv(
+            f"{self.msk_impact_2017_dir}/data_mutations.txt", sep="\t", skiprows=1
+        )

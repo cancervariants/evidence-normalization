@@ -1,8 +1,9 @@
 """Dev CLI"""
+
 import asyncclick as click
 
 from evidence.dev.etl.cancer_hotspots import CancerHotspotsETL, CancerHotspotsETLError
-from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
+from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLError
 
 
 @click.command()
@@ -10,22 +11,23 @@ from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
     "--transform_cancer_hotspots",
     is_flag=True,
     default=False,
-    help="Transform Cancer Hotspots data"
+    help="Transform Cancer Hotspots data",
 )
 @click.option(
     "--transform_cbioportal",
     is_flag=True,
     default=False,
-    help="Transform cBioPortal data"
+    help="Transform cBioPortal data",
 )
 @click.option(
     "--transform_all",
     is_flag=True,
     default=False,
-    help="Transforms all source data, currently cBioPortal and Cancer Hotspots"
+    help="Transforms all source data, currently cBioPortal and Cancer Hotspots",
 )
-async def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
-              transform_all: bool) -> None:
+async def cli(
+    transform_cancer_hotspots: bool, transform_cbioportal: bool, transform_all: bool
+) -> None:
     """Execute CLI methods
 
     :param bool transform_cancer_hotspots: Determines whether or not to transform
@@ -49,7 +51,7 @@ def transform_cbioportal_data() -> None:
     c = CBioPortalETL()
     try:
         c.transform_data()
-    except CBioPortalETLException as e:
+    except CBioPortalETLError as e:
         click.echo(e)
 
 

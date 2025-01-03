@@ -1,6 +1,6 @@
 """Module for testing cancer hotspots"""
-import pytest
 
+import pytest
 from evidence.data_sources import CancerHotspots
 
 
@@ -19,7 +19,7 @@ def braf_v600e():
         "mutation": "V600E",
         "q_value": 0.0,
         "observations": 833,
-        "total_observations": 897
+        "total_observations": 897,
     }
 
 
@@ -32,47 +32,51 @@ def check_source_meta(response):
 def test_mutation_hotspots(cancer_hotspots, braf_v600e):
     """Test that mutation_hotspots method works correctly."""
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.mo-SCo1oC_8rUioVymmrlDjwewWzJUdt")
+        "ga4gh:VA.mo-SCo1oC_8rUioVymmrlDjwewWzJUdt"
+    )
     assert resp.data == {
         "variation": "BRAF N486_A489delinsK",
         "codon": "486-494",
         "mutation": "N486_A489delinsK",
         "q_value": 3.9500653726776106e-09,
         "observations": 1,
-        "total_observations": 7
+        "total_observations": 7,
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.qiBmeiaWQpVa-NQbBk-tRb29arFXHlII")
+        "ga4gh:VA.qiBmeiaWQpVa-NQbBk-tRb29arFXHlII"
+    )
     assert resp.data == {
         "variation": "BRAF N486_P490del",
         "codon": "486-494",
         "mutation": "N486_P490del",
         "q_value": 3.9500653726776106e-09,
         "observations": 3,
-        "total_observations": 7
+        "total_observations": 7,
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.4Wr6-Pw1TiTDxvYTSthJHz0sl52wb7Hq")
+        "ga4gh:VA.4Wr6-Pw1TiTDxvYTSthJHz0sl52wb7Hq"
+    )
     assert resp.data == {
         "variation": "TP53 I255del",
         "codon": "229-292",
         "mutation": "I255del",
         "q_value": 1.46521691051924e-64,
         "observations": 9,
-        "total_observations": 76
+        "total_observations": 76,
     }
 
     resp = cancer_hotspots.mutation_hotspots(
-        "ga4gh:VA.0rVaYwX7S_-NenW_WQ5e7JoHQFkscWUS")
+        "ga4gh:VA.0rVaYwX7S_-NenW_WQ5e7JoHQFkscWUS"
+    )
     assert resp.data == {
         "variation": "CEBPA T310_Q311insKQNP",
         "codon": "307-311",
         "mutation": "T310_Q311insKQNP",
         "q_value": 0.0050613902181432,
         "observations": 1,
-        "total_observations": 4
+        "total_observations": 4,
     }
 
     resp = cancer_hotspots.mutation_hotspots(

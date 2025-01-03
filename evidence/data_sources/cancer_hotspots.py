@@ -3,20 +3,18 @@
 Downloads Site: https://www.cancerhotspots.org/#/download
 Data URL: https://www.cancerhotspots.org/files/hotspots_v2.xls
 """
+
+import json
 import logging
-from os import remove
 import shutil
 from pathlib import Path
-from typing import Optional
-import json
 
 import boto3
 from botocore.config import Config
 
 from evidence import DATA_DIR_PATH
 from evidence.data_sources.base import DownloadableDataSource
-from evidence.schemas import SourceDataType, SourceMeta, Response, Sources
-
+from evidence.schemas import Response, SourceDataType, SourceMeta, Sources
 
 _logger = logging.getLogger(__name__)
 
@@ -25,10 +23,11 @@ class CancerHotspots(DownloadableDataSource):
     """Class for Cancer Hotspots Data Access."""
 
     def __init__(
-        self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
+        self,
+        data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
         src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
-        transformed_data_path: Optional[Path] = None,
-        ignore_transformed_data: bool = False
+        transformed_data_path: Path | None = None,
+        ignore_transformed_data: bool = False,
     ) -> None:
         """Initialize Cancer Hotspots class
 
@@ -64,9 +63,11 @@ class CancerHotspots(DownloadableDataSource):
         data_path = None
         _logger.info("Retrieving transformed cancer hotspots data from s3 bucket...")
         s3 = boto3.resource("s3", config=Config(region_name="us-east-2"))
-        prefix = \
-            f"evidence_normalization/cancer_hotspots/{src_data_type.value}_"
-        bucket = sorted(list(s3.Bucket("vicc-normalizers").objects.filter(Prefix=prefix).all()), key=lambda o: o.key)  # noqa: E501
+        prefix = f"evidence_normalization/cancer_hotspots/{src_data_type.value}_"
+        bucket = sorted(
+            s3.Bucket("vicc-normalizers").objects.filter(Prefix=prefix).all(),
+            key=lambda o: o.key,
+        )
         if len(bucket) > 0:
             obj = bucket.pop().Object()
             obj_s3_path = obj.key
@@ -75,10 +76,10 @@ class CancerHotspots(DownloadableDataSource):
             transformed_data_path = self.src_dir_path / fn
             if not transformed_data_path.exists():
                 zip_path = self.src_dir_path / zip_fn
-                with open(zip_path, "wb") as f:
+                with zip_path.open("wb") as f:
                     obj.download_fileobj(f)
                 shutil.unpack_archive(zip_path, self.src_dir_path)
-                remove(zip_path)
+                Path.unlink(zip_path)
                 _logger.info("Successfully downloaded transformed Cancer Hotspots data")
             else:
                 _logger.info("Latest transformed Cancer Hotspots data already exists")
@@ -100,6 +101,6 @@ class CancerHotspots(DownloadableDataSource):
         return self.format_response(
             Response(
                 data=self.transformed_data.get(vrs_variation_id, {}),
-                source_meta_=self.source_meta
+                source_meta_=self.source_meta,
             )
         )
