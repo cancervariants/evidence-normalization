@@ -1,8 +1,8 @@
 """Module containing schemas"""
-from enum import Enum
-from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, StrictStr, ConfigDict
+from enum import Enum
+
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 
 
 class Base(BaseModel, extra="forbid"):
@@ -20,7 +20,7 @@ class SourceMeta(Base):
     """Metadata for sources"""
 
     label: Sources
-    version: Optional[StrictStr] = None
+    version: StrictStr | None = None
 
 
 class Response(Base):
@@ -28,8 +28,8 @@ class Response(Base):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    id: Optional[str] = Field(default=None, alias="_id")
-    data: Dict = dict()
+    id: str | None = Field(default=None, alias="_id")
+    data: dict
     source_meta_: SourceMeta
 
 

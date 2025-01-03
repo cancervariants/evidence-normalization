@@ -1,13 +1,13 @@
 """Module for ETL cancer hotspots data"""
+
+import datetime
 import json
 import logging
-from timeit import default_timer as timer
-from datetime import datetime
-from typing import Optional
 from pathlib import Path
+from timeit import default_timer as timer
 
-import requests
 import pandas as pd
+import requests
 from variation.query import QueryHandler
 
 from evidence import DATA_DIR_PATH
@@ -25,10 +25,11 @@ class CancerHotspotsETL(CancerHotspots):
     """Class for Cancer Hotspots ETL methods."""
 
     def __init__(
-        self, data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
+        self,
+        data_url: str = "https://www.cancerhotspots.org/files/hotspots_v2.xls",
         src_dir_path: Path = DATA_DIR_PATH / "cancer_hotspots",
-        transformed_data_path: Optional[Path] = DATA_DIR_PATH / "cancer_hotspots",
-        ignore_transformed_data: bool = True
+        transformed_data_path: Path | None = DATA_DIR_PATH / "cancer_hotspots",
+        ignore_transformed_data: bool = True,
     ) -> None:
         """Initialize the CancerHotspotsETL class
 
@@ -50,13 +51,15 @@ class CancerHotspotsETL(CancerHotspots):
     def download_data(self) -> None:
         """Download Cancer Hotspots data."""
         if not self.data_path.exists():
-            r = requests.get(self.data_url)
+            r = requests.get(self.data_url, timeout=5)
             if r.status_code == 200:
-                with open(self.data_path, "wb") as f:
+                with self.data_path.open("wb") as f:
                     f.write(r.content)
             else:
-                _logger.error(f"Unable to download Cancer Hotspots data. "
-                             f"Received status code: {r.status_code}")
+                _logger.error(
+                    "Unable to download Cancer Hotspots data. Received status code: %i",
+                    r.status_code,
+                )
 
     async def add_vrs_identifier_to_data(self) -> None:
         """Normalize variations in cancer hotspots and updates `transformed_data`
@@ -66,9 +69,8 @@ class CancerHotspotsETL(CancerHotspots):
         """
         self.download_data()
         if not self.data_path.exists():
-            raise CancerHotspotsETLError(
-                "Downloading Cancer Hotspots data was unsuccessful"
-            )
+            err_msg = "Downloading Cancer Hotspots data was unsuccessful"
+            raise CancerHotspotsETLError(err_msg)
 
         snv_hotspots = pd.read_excel(self.data_path, sheet_name="SNV-hotspots")
         indel_hotspots = pd.read_excel(self.data_path, sheet_name="INDEL-hotspots")
@@ -76,15 +78,17 @@ class CancerHotspotsETL(CancerHotspots):
 
         _logger.info("Normalizing Cancer Hotspots data...")
         start = timer()
+        await self.get_transformed_data(snv_hotspots, variation_normalizer, is_snv=True)
         await self.get_transformed_data(
-            snv_hotspots, variation_normalizer, is_snv=True)
-        await self.get_transformed_data(
-            indel_hotspots, variation_normalizer, is_snv=False)
+            indel_hotspots, variation_normalizer, is_snv=False
+        )
         end = timer()
 
         _logger.info("Transformed Cancer Hotspots data in %.*f s", 2, end - start)
 
-        today = datetime.strftime(datetime.today(), "%Y%m%d")
+        today = datetime.datetime.strftime(
+            datetime.datetime.now(tz=datetime.UTC), "%Y%m%d"
+        )
         transformed_data_path = self.src_dir_path / f"cancer_hotspots_{today}.json"
         with transformed_data_path.open("w") as f:
             json.dump(self.transformed_data, f)
@@ -113,9 +117,13 @@ class CancerHotspotsETL(CancerHotspots):
                 variation = f"{hugo_symbol} {alt.split(':')[0]}"
 
             try:
-                variation_norm_resp = await variation_normalizer.normalize_handler.normalize(variation)  # noqa: E501
+                variation_norm_resp = (
+                    await variation_normalizer.normalize_handler.normalize(variation)
+                )
             except Exception as e:
-                _logger.error("variation-normalizer unable to normalize %s: %s", variation, str(e))  # noqa: E501
+                _logger.error(
+                    "variation-normalizer unable to normalize %s: %s", variation, str(e)
+                )
             else:
                 if variation_norm_resp and variation_norm_resp.variation:
                     vrs_id = variation_norm_resp.variation.id
@@ -123,7 +131,7 @@ class CancerHotspotsETL(CancerHotspots):
                         _logger.debug(
                             "duplicate vrs_id (%s) for variation (%s)",
                             vrs_id,
-                            variation
+                            variation,
                         )
 
                     mutation, observations = alt.split(":")
@@ -140,7 +148,9 @@ class CancerHotspotsETL(CancerHotspots):
                         "mutation": mutation,
                         "q_value": float(row["qvalue"]),
                         "observations": int(observations),
-                        "total_observations": int(row["Mutation_Count"])
+                        "total_observations": int(row["Mutation_Count"]),
                     }
                 else:
-                    _logger.warning("variation-normalizer unable to normalize: %s", variation)  # noqa: E501
+                    _logger.warning(
+                        "variation-normalizer unable to normalize: %s", variation
+                    )

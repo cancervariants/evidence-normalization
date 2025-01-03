@@ -1,12 +1,11 @@
 """Module for the base data source class"""
-import json
+
 import hashlib
+import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 from evidence.schemas import Response, SourceDataType
-
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class DataSource:
             blob = json.dumps(
                 resp.model_dump(), sort_keys=True, separators=(",", ":"), indent=None
             ).encode("utf-8")
-            digest = hashlib.md5(blob)
+            digest = hashlib.md5(blob)  # noqa: S324
             resp.id = f"normalize.evidence:{digest.hexdigest()}"
         return resp
 
@@ -33,8 +32,9 @@ class DataSource:
 class DownloadableDataSource(DataSource):
     """A base class for sources that use downloadable data"""
 
-    def __init__(self, data_url: str, src_dir_path: Path,
-                 ignore_transformed_data: bool) -> None:
+    def __init__(
+        self, data_url: str, src_dir_path: Path, ignore_transformed_data: bool
+    ) -> None:
         """Initialize DownloadableDataSource class
 
         :param str data_url: URL to data file
@@ -57,8 +57,9 @@ class DownloadableDataSource(DataSource):
         """
         raise NotImplementedError
 
-    def get_transformed_data_path(self, transformed_data_path: Path,
-                                  src_data_type: SourceDataType) -> Optional[Path]:
+    def get_transformed_data_path(
+        self, transformed_data_path: Path, src_data_type: SourceDataType
+    ) -> Path | None:
         """Get transformed data path for source
 
         :param Path transformed_data_path: The path to the transformed data file
@@ -72,7 +73,9 @@ class DownloadableDataSource(DataSource):
                 if transformed_data_path.exists():
                     data_path = transformed_data_path
                 else:
-                    _logger.error("The supplied path at %s does not exist.", transformed_data_path)
+                    _logger.error(
+                        "The supplied path at %s does not exist.", transformed_data_path
+                    )
             else:
                 data_path = self.download_s3_data(src_data_type)
         return data_path
