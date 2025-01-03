@@ -2,13 +2,12 @@
 
 import pytest
 from evidence.data_sources import CancerHotspots
-from tests.conftest import DATA_DIR
 
 
 @pytest.fixture(scope="module")
-def cancer_hotspots():
+def cancer_hotspots(evidence_data_dir):
     """Create test fixture for cancer hotspots class"""
-    globbed = (DATA_DIR / "cancer_hotspots").glob("cancer_hotspots_*.json")
+    globbed = (evidence_data_dir / "cancer_hotspots").glob("cancer_hotspots_*.json")
     return CancerHotspots(transformed_data_path=sorted(globbed)[-1])
 
 

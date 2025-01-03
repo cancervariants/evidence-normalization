@@ -2,4 +2,10 @@
 
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "evidence" / "data"
+import pytest
+
+
+@pytest.fixture(scope="session")
+def evidence_data_dir() -> Path:
+    """Return evidence data directory"""
+    return Path(__file__).resolve().parents[1] / "evidence" / "data"
