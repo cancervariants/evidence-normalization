@@ -57,7 +57,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 [tool.pytest.ini_options]
-addopts = "--cov=evidence --cov-report term-missing"
+addopts = "--cov=src --cov-report term-missing"
 testpaths = ["tests"]
 
 [tool.coverage.run]
