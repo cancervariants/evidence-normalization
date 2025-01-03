@@ -2,12 +2,19 @@
 
 import pytest
 from evidence.data_sources import CBioPortal
+from tests.conftest import DATA_DIR
 
 
 @pytest.fixture(scope="module")
 def cbioportal():
     """Create test fixture for cbioportal class"""
-    return CBioPortal()
+    cbioportal_data_dir = DATA_DIR / "cbioportal"
+    return CBioPortal(
+        transformed_mutations_data_path=cbioportal_data_dir
+        / "msk_impact_2017_mutations.csv",
+        transformed_case_lists_data_path=cbioportal_data_dir
+        / "msk_impact_2017_case_lists.csv",
+    )
 
 
 @pytest.fixture(scope="module")
