@@ -1,8 +1,19 @@
 """Dev CLI"""
+import logging
+
 import asyncclick as click
 
 from evidence.dev.etl.cancer_hotspots import CancerHotspotsETL, CancerHotspotsETLError
 from evidence.dev.etl.cbioportal import CBioPortalETL, CBioPortalETLException
+
+
+def _configure_logging() -> None:
+    """Configure logging."""
+    logging.basicConfig(
+        filename=f"{__package__}.log",
+        format="[%(asctime)s] - %(name)s - %(levelname)s : %(message)s",
+    )
+    logging.getLogger(__package__).setLevel(logging.DEBUG)
 
 
 @click.command()
@@ -34,6 +45,7 @@ async def cli(transform_cancer_hotspots: bool, transform_cbioportal: bool,
         data
     :param bool transform_all: Transforms all source data
     """
+    _configure_logging()
     if transform_all:
         transform_cbioportal_data()
         await transform_cancer_hotspots_data()
