@@ -71,7 +71,7 @@ async def transform_cancer_hotspots_data() -> None:
     """Transform Cancer Hotspots data"""
     c = CancerHotspotsETL()
     try:
-        await c.add_vrs_identifier_to_data()
+        await c.transform_and_write_hotspots()
     except CancerHotspotsETLError as e:
         click.echo(e)
 
