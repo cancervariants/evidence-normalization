@@ -19,7 +19,7 @@ class CBioPortal(DownloadableDataSource):
 
     def __init__(
         self,
-        data_url: str = "https://cbioportal-datahub.s3.amazonaws.com/msk_impact_2017.tar.gz",
+        data_url: str = "https://datahub.assets.cbioportal.org/msk_impact_2017.tar.gz",
         src_dir_path: Path = DATA_DIR_PATH / "cbioportal",
         transformed_mutations_data_path: Path | None = None,
         transformed_case_lists_data_path: Path | None = None,
