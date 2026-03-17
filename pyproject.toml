@@ -29,7 +29,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 etl = [
-    "variation-normalizer~=0.15.3",
+    "variation-normalizer~=0.15.4",
     "asyncclick",
     "openpyxl",
     "pandas",
